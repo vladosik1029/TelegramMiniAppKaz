@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
-import { Hand, BetBar, ResultBanner } from '../components/ui.jsx';
+import { Hand, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 
 const OUTCOME_EXTRA = {
   pan_pan: '🩸 ПАН-ПАН! Обе карты пиковые — выплата 3:1',
@@ -65,18 +66,18 @@ export default function Ochko({ profile, refresh }) {
       {!inRound && !result && <BetBar balance={balance} bet={bet} setBet={setBet} disabled={busy} onDeal={deal} />}
 
       {inRound && (
-        <div className="actions">
-          <button className="btn primary" disabled={busy} onClick={() => act('hit')}>Ещё карту</button>
-          <button className="btn primary" disabled={busy} onClick={() => act('stop')}>Хватит</button>
-        </div>
+        <motion.div className="actions" variants={actionsStagger} initial="hidden" animate="show">
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary" disabled={busy} onClick={() => act('hit')}>Ещё карту</motion.button>
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary" disabled={busy} onClick={() => act('stop')}>Хватит</motion.button>
+        </motion.div>
       )}
 
       {result && (
-        <div className="actions">
-          <button className="btn primary big" onClick={() => { setResult(null); setView(null); }}>
+        <motion.div className="actions" variants={actionsStagger} initial="hidden" animate="show">
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary big" onClick={() => { setResult(null); setView(null); }}>
             🔄 Новый раунд
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
     </main>
   );

@@ -114,6 +114,19 @@ body {
 }
 .cards { display: flex; gap: 8px; flex-wrap: wrap; min-height: 96px; }
 
+/* Обёртка-аниматор карты: влёт из шуфля (framer) + 3D-переворот вскрытия (CSS) */
+.card-anim { display: inline-block; position: relative; flex: 0 0 auto; }
+.card-anim.dim { opacity: .55; }
+.card-anim.flipping .card {
+  transform-style: preserve-3d;
+  animation: flipIn .55s .12s both cubic-bezier(.3, .7, .4, 1.05);
+}
+@keyframes flipIn {
+  0%   { transform: rotateY(-92deg); opacity: .35; }
+  60%  { opacity: 1; }
+  100% { transform: rotateY(0deg); }
+}
+
 .card {
   width: 62px; height: 88px; border-radius: 10px;
   background: var(--card-face);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
-import { Hand, BetBar, ResultBanner } from '../components/ui.jsx';
+import { Hand, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 
 export default function Blackjack({ profile, refresh }) {
   const [bet, setBet] = useState(50);
@@ -68,23 +69,23 @@ export default function Blackjack({ profile, refresh }) {
       )}
 
       {inRound && (
-        <div className="actions">
-          <button className="btn primary" disabled={busy} onClick={() => act('hit')}>Ещё (hit)</button>
-          <button className="btn primary" disabled={busy} onClick={() => act('stand')}>Хватит (stand)</button>
+        <motion.div className="actions" variants={actionsStagger} initial="hidden" animate="show">
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary" disabled={busy} onClick={() => act('hit')}>Ещё (hit)</motion.button>
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary" disabled={busy} onClick={() => act('stand')}>Хватит (stand)</motion.button>
           {view.canDouble && (
-            <button className="btn" disabled={busy} onClick={() => act('double')}>
+            <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn" disabled={busy} onClick={() => act('double')}>
               Дабл ×2 ({(bet).toLocaleString('ru-RU')} 🪙)
-            </button>
+            </motion.button>
           )}
-        </div>
+        </motion.div>
       )}
 
       {result && (
-        <div className="actions">
-          <button className="btn primary big" onClick={() => { setResult(null); setView(null); }}>
+        <motion.div className="actions" variants={actionsStagger} initial="hidden" animate="show">
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary big" onClick={() => { setResult(null); setView(null); }}>
             🔄 Новый раунд
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
     </main>
   );

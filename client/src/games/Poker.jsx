@@ -1,27 +1,37 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
-import { CardView, BetBar, ResultBanner } from '../components/ui.jsx';
+import { CardView, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 
 function PokerHand({ title, cards, label, selectable, selected, onToggle }) {
   return (
     <div className="hand">
       <div className="hand-head">
         <span className="hand-title">{title}</span>
-        {label && <span className="hand-label">{label}</span>}
+        {label && (
+          <motion.span
+            key={label}
+            className="hand-label"
+            initial={{ scale: .5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+          >{label}</motion.span>
+        )}
       </div>
       <div className="cards">
         {cards.map((c, i) => (
           selectable ? (
-            <button
+            <motion.button
               key={i}
+              whileTap={{ scale: .93 }}
               className={`card-slot ${selected.has(i) ? 'selected' : ''}`}
               onClick={() => onToggle(i)}
             >
-              <CardView card={c} dim={selected.has(i)} />
+              <CardView card={c} dim={selected.has(i)} delay={Math.min(i * 0.06, 0.3)} />
               <span className="card-slot-mark">{selected.has(i) ? '↺' : ''}</span>
-            </button>
+            </motion.button>
           ) : (
-            <CardView key={i} card={c} />
+            <CardView key={i} card={c} delay={Math.min(i * 0.06, 0.3)} />
           )
         ))}
       </div>
@@ -98,24 +108,24 @@ export default function Poker({ profile, refresh }) {
       )}
 
       {view && view.stage === 'draw' && (
-        <div className="actions">
-          <button className="btn primary" disabled={busy} onClick={draw}>
+        <motion.div className="actions" variants={actionsStagger} initial="hidden" animate="show">
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary" disabled={busy} onClick={draw}>
             Обменять ({selected.size || 0})
-          </button>
+          </motion.button>
           {result || !view ? null : (
-            <button className="btn" disabled={busy} onClick={() => setSelected(new Set())}>
+            <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn" disabled={busy} onClick={() => setSelected(new Set())}>
               Снять выбор
-            </button>
+            </motion.button>
           )}
-        </div>
+        </motion.div>
       )}
 
       {result && (
-        <div className="actions">
-          <button className="btn primary big" onClick={() => { setResult(null); setView(null); }}>
+        <motion.div className="actions" variants={actionsStagger} initial="hidden" animate="show">
+          <motion.button variants={actionsItem} whileTap={{ scale: .95 }} className="btn primary big" onClick={() => { setResult(null); setView(null); }}>
             🔄 Новая партия
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
     </main>
   );
