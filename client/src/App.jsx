@@ -11,6 +11,7 @@ import HiLo from './games/HiLo.jsx';
 import Dice from './games/Dice.jsx';
 import Crash from './games/Crash.jsx';
 import Plinko from './games/Plinko.jsx';
+import Baccarat from './games/Baccarat.jsx';
 import { AnimatedNumber } from './components/fx.jsx';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
@@ -21,6 +22,7 @@ const GAMES = [
   { id: 'blackjack', title: 'Blackjack', subtitle: '21 очко против дилера', icon: '🂡', group: 'cards', accent: 'emerald' },
   { id: 'ochko', title: 'Очко', subtitle: 'Русская «21» с пан-пан', icon: '♠️', group: 'cards', accent: 'ruby' },
   { id: 'poker', title: 'Покер', subtitle: 'Пятикарточный дро-покер', icon: '🂱', group: 'cards', accent: 'sapphire' },
+  { id: 'baccarat', title: 'Баккара', subtitle: 'Игрок, Банкир или Ничья', icon: '🎴', group: 'cards', accent: 'violet' },
   { id: 'hilo', title: 'Выше / Ниже', subtitle: 'Угадай следующую карту', icon: '🃏', group: 'cards', accent: 'amber' },
   { id: 'crash', title: 'Ракета', subtitle: 'Забери до взрыва · онлайн', icon: '🚀', group: 'quick', accent: 'amber' },
   { id: 'plinko', title: 'Плинко', subtitle: 'Шарик через колышки, до ×170', icon: '🟡', group: 'quick', accent: 'violet' },
@@ -43,7 +45,7 @@ const GROUPS = [
   { id: 'quick', title: '⚡ Быстрые' },
 ];
 
-const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Roulette, slots: Slots, mines: Mines, hilo: HiLo, dice: Dice, crash: Crash, plinko: Plinko };
+const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Roulette, slots: Slots, mines: Mines, hilo: HiLo, dice: Dice, crash: Crash, plinko: Plinko, baccarat: Baccarat };
 
 export default function App() {
   const [profile, setProfile] = useState(null);

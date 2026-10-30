@@ -9,6 +9,7 @@ import * as poker from './games/poker.js';
 import * as roulette from './games/roulette.js';
 import * as dice from './games/dice.js';
 import * as plinko from './games/plinko.js';
+import * as baccarat from './games/baccarat.js';
 import * as slots from './games/slots.js';
 import * as mines from './games/mines.js';
 import * as hilo from './games/hilo.js';
@@ -104,7 +105,7 @@ function me(user) {
 }
 
 // ─── игровой движок ──────────────────────────────────────────────────────────
-const GAMES = { blackjack, ochko, poker, roulette, dice, slots, mines, hilo, plinko };
+const GAMES = { blackjack, ochko, poker, roulette, dice, slots, mines, hilo, plinko, baccarat };
 
 function validateBet(bet) {
   bet = Math.floor(Number(bet));

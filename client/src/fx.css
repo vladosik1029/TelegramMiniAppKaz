@@ -301,3 +301,28 @@
 .plinko-last .pos { color: #7ef0ae; }
 .plinko-last .neg { color: #ff8a80; }
 @media (min-width: 480px) { .plinko-slot { font-size: 11px; } }
+
+/* ─── Баккара ────────────────────────────────────────── */
+.bac-road { display: flex; gap: 4px; flex-wrap: wrap; min-height: 22px; margin-bottom: 8px; align-items: center; }
+.bac-hint { font-size: 12px; color: var(--muted); }
+.bac-dot {
+  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 10px; font-weight: 900; color: #fff;
+}
+.bac-dot.player, .bac-pick.player.active { background: #2f6fd6; }
+.bac-dot.banker, .bac-pick.banker.active { background: #c0392b; }
+.bac-dot.tie, .bac-pick.tie.active { background: #2e9d5b; }
+.bac-side { border-radius: 14px; transition: box-shadow .3s, background .3s; }
+.bac-side.won { background: rgba(230, 192, 101, .08); box-shadow: inset 0 0 0 2px rgba(230, 192, 101, .55); }
+.bac-tie { text-align: center; font-weight: 900; color: #7ef0ae; margin-top: 10px; font-size: 18px; }
+.bac-sides { display: grid; grid-template-columns: 1fr .8fr 1fr; gap: 8px; }
+.bac-pick {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px;
+  border-radius: 12px; border: 1px solid #2b4a35; background: rgba(0, 0, 0, .2); color: var(--text, #fff);
+  font: inherit; cursor: pointer;
+}
+.bac-pick b { font-size: 15px; }
+.bac-pick small { font-size: 12px; color: var(--gold); font-weight: 800; }
+.bac-pick.active { border-color: transparent; box-shadow: 0 0 0 2px rgba(255, 255, 255, .35); }
+.bac-pick.active small { color: #fff; }
+.bac-pick:disabled { opacity: .6; }
