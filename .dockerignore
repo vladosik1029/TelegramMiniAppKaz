@@ -1,0 +1,12 @@
+node_modules
+client/node_modules
+client/dist
+server/node_modules
+server/casino.db
+server/casino.db-*
+server/.env
+.env
+*.log
+.git
+.gitignore
+DEPLOY-*.md

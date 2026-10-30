@@ -1,0 +1,17 @@
+services:
+  casino:
+    build: .
+    image: casino:latest
+    container_name: casino
+    restart: unless-stopped
+    # Порт публикуем только на localhost — наружу будет Caddy
+    ports:
+      - "127.0.0.1:3100:3100"
+    env_file:
+      - ./server/.env
+    environment:
+      PORT: 3100
+      # База живёт в volume, чтобы не терялась при пересоздании контейнера
+      DB_PATH: /app/server/data/casino.db
+    volumes:
+      - ./casino-data:/app/server/data

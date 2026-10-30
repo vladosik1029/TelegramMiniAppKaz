@@ -3,7 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const db = new DatabaseSync(path.join(__dirname, '..', 'casino.db'));
+// Путь к базе можно переопределить переменной DB_PATH (используется в docker-контейнере,
+// чтобы база жила в volume и переживала пересоздание контейнера)
+const DB_FILE = process.env.DB_PATH || path.join(__dirname, '..', 'casino.db');
+export const db = new DatabaseSync(DB_FILE);
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
