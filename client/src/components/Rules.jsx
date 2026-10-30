@@ -124,7 +124,7 @@ export default function Rules() {
               <p>{g.cards}</p>
             </div>
             <div className="rules-block">
-              <div className="rules-label">Как идёт раунд</div>
+              <div className="rules-label">🧭 Как идёт раунд</div>
               <ol className="rules-steps">
                 {g.steps.map((s, i) => <li key={i}>{s}</li>)}
               </ol>

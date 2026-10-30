@@ -29,7 +29,7 @@ body {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100%;
-  padding: 12px 16px calc(70px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(96px + env(safe-area-inset-bottom));
 }
 
 .app-loading, .app-error { padding: 40px; text-align: center; color: var(--muted); }
@@ -236,8 +236,10 @@ body {
 .rules-card {
   background: linear-gradient(160deg, var(--card), var(--bg2));
   border: 1px solid #2b4a35; border-radius: var(--radius);
-  padding: 16px 14px; margin-top: 10px;
+  padding: 16px 14px 18px; margin-top: 10px;
+  margin-bottom: 8px;
 }
+.rules-card > .rules-block:last-child { margin-bottom: 0; }
 .rules-title { font-size: 20px; font-weight: 900; color: var(--gold); }
 .rules-sub { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
 
