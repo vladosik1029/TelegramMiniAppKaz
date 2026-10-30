@@ -6,6 +6,7 @@ import { env, parseInitData, MIN_BET, MAX_BET } from './telegram.js';
 import * as blackjack from './games/blackjack.js';
 import * as ochko from './games/ochko.js';
 import * as poker from './games/poker.js';
+import * as roulette from './games/roulette.js';
 
 export const api = Router();
 
@@ -78,7 +79,7 @@ function me(user) {
 }
 
 // ─── игровой движок ──────────────────────────────────────────────────────────
-const GAMES = { blackjack, ochko, poker };
+const GAMES = { blackjack, ochko, poker, roulette };
 
 function validateBet(bet) {
   bet = Math.floor(Number(bet));
@@ -99,7 +100,7 @@ api.post('/games/:game/start', (req, res) => {
       changeBalance(req.user.id, -bet);
       db.prepare('DELETE FROM sessions WHERE user_id = ? AND game = ?').run(req.user.id, game);
 
-      const started = mod.start(bet);
+      const started = mod.start(bet, req.body?.opts ?? null);
       if (started.finished) {
         return settle(req.user.id, game, bet, started);
       }

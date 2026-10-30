@@ -4,6 +4,7 @@ import { api, tg, haptic } from './api.js';
 import Blackjack from './games/Blackjack.jsx';
 import Ochko from './games/Ochko.jsx';
 import Poker from './games/Poker.jsx';
+import Roulette from './games/Roulette.jsx';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import Rules from './components/Rules.jsx';
@@ -12,6 +13,7 @@ const GAMES = [
   { id: 'blackjack', title: 'Blackjack', subtitle: '21 очко против дилера', icon: '🂡' },
   { id: 'ochko', title: 'Очко', subtitle: 'Русская «21» с пан-пан', icon: '♠️' },
   { id: 'poker', title: 'Покер', subtitle: 'Пятикарточный дро-покер', icon: '🂱' },
+  { id: 'roulette', title: 'Рулетка', subtitle: 'Европейская, 37 лунок', icon: '🎡' },
 ];
 
 export default function App() {
@@ -47,6 +49,7 @@ export default function App() {
         {screenGame === 'blackjack' && <Blackjack {...gameProps} />}
         {screenGame === 'ochko' && <Ochko {...gameProps} />}
         {screenGame === 'poker' && <Poker {...gameProps} />}
+        {screenGame === 'roulette' && <Roulette {...gameProps} />}
       </motion.div>
     );
   }

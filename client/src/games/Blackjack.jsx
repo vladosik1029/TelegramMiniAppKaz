@@ -49,12 +49,15 @@ export default function Blackjack({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
-      <Hand title="🤖 Дилер" cards={view?.dealer ?? []} total={view?.dealerTotal} />
-      <Hand
-        title="🙋 Ты" cards={view?.player ?? []} total={view?.playerTotal}
-        label={view?.playerTotal === 21 && view.player.length === 2 && inRound ? 'Blackjack!' :
-               view?.playerTotal > 21 ? 'Перебор' : null}
-      />
+      <div className="table-felt">
+        <Hand title="🤖 Дилер" cards={view?.dealer ?? []} total={view?.dealerTotal} />
+        <div className="felt-sep" />
+        <Hand
+          title="🙋 Ты" cards={view?.player ?? []} total={view?.playerTotal}
+          label={view?.playerTotal === 21 && view.player.length === 2 && inRound ? 'Blackjack!' :
+                 view?.playerTotal > 21 ? 'Перебор' : null}
+        />
+      </div>
 
       {result && (
         <ResultBanner

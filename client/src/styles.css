@@ -18,11 +18,23 @@ html, body { height: 100%; }
 
 body {
   font-family: -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
-  background:
-    radial-gradient(1200px 500px at 50% -10%, #22402e 0%, transparent 60%),
-    var(--bg);
+  background: #0c150f;
   color: var(--text);
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Фон — один фиксированный слой на весь вьюпорт: тонкая «подсветка» + фактура
+   войлока. Позиция fixed ⇒ не «плывёт» и не дублируется на длинных страницах. */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none;
+  background-color: #101a13;
+  background-image:
+    radial-gradient(1100px 520px at 50% -8%, rgba(63, 125, 85, .30), transparent 60%),
+    radial-gradient(900px 480px at 108% 108%, rgba(42, 92, 62, .22), transparent 65%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,.014) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,.05) 0 3px, transparent 3px 8px);
 }
 
 #root {
@@ -102,6 +114,35 @@ body {
 .history-net { font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
 .history-net.pos { color: var(--green); }
 .history-net.neg { color: var(--red); }
+
+/* ─── игровой стол (войлок) — общий фон игровых экранов и будущих комнат ── */
+.table-felt {
+  position: relative;
+  background:
+    radial-gradient(130% 95% at 50% 0%, rgba(255, 255, 255, .07), transparent 55%),
+    linear-gradient(180deg, #1d4230, #143524 62%, #102a1c);
+  border: 1px solid rgba(230, 192, 101, .32);
+  border-radius: 18px;
+  padding: 14px 12px;
+  margin: 10px 0;
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, .30),
+    inset 0 0 70px rgba(0, 0, 0, .45),
+    0 10px 26px rgba(0, 0, 0, .38);
+}
+.table-felt::before {
+  content: '';
+  position: absolute; inset: 7px;
+  border: 1px dashed rgba(230, 192, 101, .18);
+  border-radius: 13px;
+  pointer-events: none;
+}
+.felt-sep {
+  height: 1px;
+  margin: 10px 0;
+  background: linear-gradient(90deg, transparent, rgba(230, 192, 101, .35), transparent);
+}
+.rw-pick-hint { text-align: center; padding-top: 8px; }
 
 /* ─── карточная графика ─────────────────────────────── */
 .hand { margin: 10px 0; }
@@ -319,3 +360,98 @@ body {
 }
 .rules-tip .rules-label { color: #f0d9a1; }
 .rules-tip p { font-size: 13px; color: #f0d9a1; }
+
+/* ─── рулетка ───────────────────────────────────────── */
+.rw-felt { padding-bottom: 18px; }
+.rw-wrap { display: flex; flex-direction: column; align-items: center; }
+.wheel-box {
+  position: relative;
+  width: min(240px, 66vw);
+  aspect-ratio: 1;
+  margin-top: 10px;
+}
+.wheel-pointer {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  border-left: 9px solid transparent; border-right: 9px solid transparent;
+  border-top: 16px solid var(--gold);
+  z-index: 3;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.5));
+}
+.wheel {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 7px solid var(--gold2);
+  background: #0c150f;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .55), inset 0 0 0 3px rgba(0, 0, 0, .4);
+}
+.wheel-face { position: absolute; inset: 4px; border-radius: 50%; }
+.wheel-ball-ring { position: absolute; inset: 0; z-index: 2; }
+.wheel-ball {
+  position: absolute; top: 15%; left: 50%; margin-left: -5px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #b9c0c7 65%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .55);
+}
+.wheel-hub {
+  position: absolute; inset: 37%;
+  z-index: 2; border-radius: 50%;
+  background: #0d1712;
+  border: 3px solid rgba(230, 192, 101, .55);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .5);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; padding: 0 6px; text-align: center;
+}
+.wheel-hub small { font-size: 10px; color: var(--muted); letter-spacing: .08em; }
+.hub-num {
+  font-size: 27px; font-weight: 900; line-height: 1;
+  color: var(--gold);
+}
+.hub-num.red { color: #ff6b5e; }
+.hub-num.black { color: #dfe4ea; }
+.hub-num.green { color: #5ee493; }
+
+.bets-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin: 12px 0 4px;
+}
+.bet-opt {
+  background: var(--bg2); color: var(--text);
+  border: 1px solid #3a6247; border-radius: 12px;
+  padding: 9px 6px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-size: 12.5px; font-weight: 700;
+}
+.bet-opt small { color: var(--muted); font-size: 10.5px; font-weight: 800; }
+.bet-opt.red span:first-child { color: #ff8a7d; }
+.bet-opt.black span:first-child { color: #cfd6de; }
+.bet-opt.active {
+  border-color: var(--gold2);
+  background: linear-gradient(160deg, #3f7d55, #2c5a3d);
+  box-shadow: 0 0 0 1px rgba(230, 192, 101, .25);
+}
+.bet-opt.active small { color: var(--gold); }
+.bet-opt:disabled { opacity: .45; }
+
+.num-chips {
+  display: flex; gap: 5px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.num-chips::-webkit-scrollbar { display: none; }
+.num-chip {
+  flex: 0 0 auto;
+  width: 34px; height: 44px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 14px; font-weight: 800; color: #fff;
+  border: 1px solid rgba(255, 255, 255, .25);
+}
+.num-chip.red { background: #8f2b23; border-color: #b54436; }
+.num-chip.black { background: #20242a; border-color: #3a4048; }
+.num-chip.green { background: #125c30; border-color: #1f9450; }
+.num-chip.sel {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+  transform: translateY(-2px);
+}

@@ -83,21 +83,23 @@ export default function Poker({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
-      <PokerHand
-        title="🤖 Бот" cards={view?.bot ?? []}
-        label={view?.botHand || null}
-      />
-      <PokerHand
-        title="🙋 Ты" cards={view?.player ?? []}
-        label={view?.playerHand || null}
-        selectable={view && !result && view.stage === 'draw'}
-        selected={selected}
-        onToggle={toggle}
-      />
-
-      {view && !result && view.stage === 'draw' && (
-        <div className="hint">Нажми на карты, которые хочешь обменять ({selected.size} выбрано)</div>
-      )}
+      <div className="table-felt">
+        <PokerHand
+          title="🤖 Бот" cards={view?.bot ?? []}
+          label={view?.botHand || null}
+        />
+        <div className="felt-sep" />
+        <PokerHand
+          title="🙋 Ты" cards={view?.player ?? []}
+          label={view?.playerHand || null}
+          selectable={view && !result && view.stage === 'draw'}
+          selected={selected}
+          onToggle={toggle}
+        />
+        {view && !result && view.stage === 'draw' && (
+          <div className="hint rw-pick-hint">Нажми на карты, которые хочешь обменять ({selected.size} выбрано)</div>
+        )}
+      </div>
 
       {result && <ResultBanner result={result} />}
 
