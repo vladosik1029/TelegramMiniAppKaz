@@ -90,27 +90,53 @@ TelegramMiniAppKaz/
 
 ## Деплой и подключение бота
 
-Telegram MiniApp **требует HTTPS**. Простой путь для теста/продакшена:
+Telegram MiniApp **требует HTTPS**. Текущий продакшен устроен так:
+**Docker-контейнер `casino` (порт 127.0.0.1:3100) → Caddy → https://poker.izzinet.xyz**
 
-1. **Собрать клиент:**
+1. **Деплой на сервер** (по умолчанию `/opt/TelegramMiniAppKaz`, см. `DEPLOY.md`):
    ```bash
-   npm run build:client          # соберёт client/dist
+   cd /opt/TelegramMiniAppKaz
+   git pull
+   docker compose up -d --build      # собрать и поднять контейнер casino
    ```
-2. **Запустить сервер** на любой машине/хостинге (`npm start` в папке `server`) —
-   он сам отдаёт и API, и клиент на одном порту.
-3. **HTTPS.** Варианты:
-   - быстрый туннель для проверки: `cloudflared tunnel --url http://localhost:3000`
-     или `ngrok http 3000`;
-   - постоянный: VPS + Nginx с Let's Encrypt (server_name → proxy_pass http://127.0.0.1:3000).
-4. **Вписать полученный HTTPS-URL в `WEBAPP_URL`** в `server/.env` и перезапустить сервер.
-5. **Привязать к боту:**
+   Контейнер задаёт `PORT=3100`, `DB_PATH=/app/server/data/casino.db` (база в volume `casino-data/`).
+   Автоперезапуск после ребута сервера — `restart: unless-stopped`.
+
+2. **HTTPS через Caddy** (для нового домена): добавить блок в `/opt/caddy/Caddyfile`,
+   затем `docker exec caddy caddy reload --config /etc/caddy/Caddyfile`.
+   Caddy сам получает и обновляет сертификаты Let's Encrypt (certbot не нужен).
+
+3. **Вписать домен в `WEBAPP_URL`** в `server/.env` и пересоздать контейнер:
+   `docker compose up -d`.
+
+4. **Привязать к боту** (один раз, при смене домена):
    ```bash
-   npm run setup:bot
+   cd server && npm run setup:bot
    ```
    Скрипт ставит кнопку меню «🎰 Казино» (web_app) и команду `/start`.
    Пользователь открывает бота → жмёт кнопку → MiniApp запускается под его Telegram-аккаунтом.
-6. **Стать админом:** свой Telegram ID в `ADMIN_IDS` (до запуска). Твой аккаунт получит
+
+5. **Стать админом:** свой Telegram ID в `ADMIN_IDS` (до запуска). Твой аккаунт получит
    вкладку «👑 Админ» — установка/начисление/списание фишек любому игроку, включая себя.
+
+### Смок-тесты после деплоя / обновления
+
+```bash
+# 1. Контейнер жив, рестартов нет
+docker ps | grep casino
+
+# 2. API отвечает локально (ожидаем JSON 401 «Не удалось проверить...» — это норма)
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3100/api/init
+
+# 3. Сквозной тест через домен (так же должен прийти JSON, не HTML и не пустота)
+curl -s https://poker.izzinet.xyz/api/init
+
+# 4. Логи без traceback (посмотри последние строки)
+docker logs casino --tail 20
+
+# 5. В Telegram: открыть бота → «🎰 Казино» → профиль загрузился,
+#    сделать ставку в Blackjack/Очко/Покере; под админским ID видна вкладка 👑
+```
 
 ---
 
