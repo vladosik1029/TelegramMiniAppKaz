@@ -7,6 +7,11 @@
 // rooms / room_members (банки) / room_bets (ставки текущего раунда).
 // При рестарте сервера bootRooms() поднимает столы и возвращает несыгранные
 // ставки в банки игроков. Рассылку по WebSocket делает ws.js через onRoomChange().
+//
+// Provably Fair рулетки стола: сид следующего спина создаётся заранее (его хэш
+// виден, пока игроки ставят), лунка = DERIVE.roulette_room(HMAC(seed,
+// client_seed:номер_спина)), client_seed — склейка сидов всех, кто поставил,
+// и свежих чисел из их «Готов». После спина сид раскрывается.
 
 import crypto from 'node:crypto';
 import { db, tx, balanceOf, changeBalance, addHistory } from './db.js';
@@ -14,8 +19,10 @@ import { env } from './telegram.js';
 import * as roulette from './games/roulette.js';
 import {
   CARD_GAMES, bindCardTables, newRound, disposeRound, cardBet, cardClear, cardReady, cardAct,
-  cardLeave, cardPresence, cardView, stakeOf,
+  cardLeave, cardPresence, cardView, cardFair, stakeOf,
 } from './cardtables.js';
+import { DERIVE } from './fair/games.js';
+import { rngFor, commitSeed, combineSeeds, cleanEntropy, revealSeed, openRound } from './fair/index.js';
 
 export const ROOM_GAMES = {
   roulette: { title: 'Рулетка', icon: '🎡', ready: true },
@@ -116,6 +123,7 @@ export function createRoom(user, params = {}) {
     id, name, game, hostId: user.id, isPublic, buyIn,
     members: new Map([[user.id, { id: user.id, name: displayName(user), bank: buyIn, joinedAt: now }]]),
     bets: [], ready: new Set(), status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
+    fair: commitSeed(), entropy: new Map(), lastFair: null,
   };
   if (isCards(room)) room.round = newRound(room);
   rooms.set(id, room);
@@ -251,7 +259,7 @@ function mustBeReady(room) {
 export function setReady(userId, roomId, opts = {}) {
   const room = mustRoom(roomId);
   mustMember(room, userId);
-  if (isCards(room)) { cardReady(room, userId, opts.ready); return room; }
+  if (isCards(room)) { cardReady(room, userId, opts.ready, opts.entropy); return room; }
   syncStatus(room);
   if (room.status !== 'open') fail('ROOM_BUSY');
   if (opts.ready === false) {
@@ -259,6 +267,7 @@ export function setReady(userId, roomId, opts = {}) {
   } else {
     if (!room.bets.some(b => b.userId === userId)) fail('NO_MY_BETS');
     room.ready.add(userId);
+    if (cleanEntropy(opts.entropy)) room.entropy.set(userId, opts.entropy);
   }
   notify(room, 'ready');
   maybeSpin(room);
@@ -283,7 +292,12 @@ function maybeSpin(room) {
 
 /** Колесо: один исход на всех, выплаты сразу в банки стола */
 function spinRoulette(room) {
-  const idx = crypto.randomInt(0, roulette.ORDER.length);
+  const f = room.fair;
+  const players = [...new Set(room.bets.map(b => b.userId))];
+  f.clientSeed = combineSeeds(players.map(id => ({ id, entropy: room.entropy.get(id) })));
+  f.nonce = room.seq + 1;
+  f.record = DERIVE.roulette_room(rngFor(f.seed, f.clientSeed, f.nonce));
+  const idx = f.record.pocket;
   const number = roulette.ORDER[idx];
 
   const results = {}; // userId -> { staked, payout, net }
@@ -300,9 +314,17 @@ function spinRoulette(room) {
       m.bank += r.payout;
       setBank(room, m);
       addHistory(m.id, 'roulette_room', r.staked, r.net);
+      openRound({
+        userId: m.id, game: 'roulette_room', roomId: room.id, hash: f.hash, clientSeed: f.clientSeed,
+        nonce: f.nonce, record: f.record, done: true, summary: `Число ${number} · ${r.net >= 0 ? '+' : ''}${r.net}`,
+      });
     }
     db.prepare('DELETE FROM room_bets WHERE room_id = ?').run(room.id);
+    revealSeed(f.seed);
   });
+  room.lastFair = f;
+  room.fair = commitSeed(); // сид следующего спина — его хэш увидят до ставок
+  room.entropy = new Map();
 
   room.seq += 1;
   room.lastSpin = {
@@ -380,8 +402,18 @@ export function roomState(room, userId) {
     lastSpin: room.lastSpin,
     recent: room.recent,
     round: isCards(room) ? cardView(room, userId) : null,
+    fair: fairView(room),
     you: { inRoom: !!me, isHost: room.hostId === userId, roomBalance: me?.bank ?? 0, ready: room.ready.has(userId) },
     invite: { link: inviteLink(room), code: `room_${room.id}` },
+  };
+}
+
+/** Provably Fair стола: хэш сида ближайшего раунда и раскрытый прошлый */
+function fairView(room) {
+  const { current, last } = isCards(room) ? cardFair(room) : { current: room.fair.hash, last: room.lastFair };
+  return {
+    current,
+    last: last && { hash: last.hash, seed: last.seed, clientSeed: last.clientSeed, nonce: last.nonce, game: `${room.game}_room` },
   };
 }
 
@@ -430,6 +462,7 @@ export function bootRooms() {
     rooms.set(r.id, {
       id: r.id, name: r.name, game: r.game, hostId: r.host_id, isPublic: !!r.is_public, buyIn: r.buy_in,
       members, bets: [], ready: new Set(), status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
+      fair: commitSeed(), entropy: new Map(), lastFair: null,
     });
     const room = rooms.get(r.id);
     if (isCards(room)) room.round = newRound(room);

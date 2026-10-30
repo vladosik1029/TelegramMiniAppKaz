@@ -4,13 +4,11 @@
 // Выплаты (returnMult — сколько вернёшь всего): равные шансы ×2, дюжины/колонки ×3,
 // число ×36. Ноль («зеро») проигрывает все внешние ставки.
 
-import crypto from 'node:crypto';
+import { DERIVE, ROULETTE_ORDER } from '../fair/games.js';
+import { randomRng } from '../fair/node.js';
 
-// Порядок лунок на европейском колесе (по кругу)
-export const ORDER = [
-  0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5,
-  24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26,
-];
+// Порядок лунок на европейском колесе (по кругу), fair/games.js
+export const ORDER = ROULETTE_ORDER;
 const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 
 export const colorOf = (num) => (num === 0 ? 'green' : RED.has(num) ? 'red' : 'black');
@@ -27,9 +25,10 @@ export const LABEL = {
   num: 'Прямая ставка на число',
 };
 
-export function start(bet, opts) {
+export function start(bet, opts, rng = randomRng()) {
   const { type, value } = parseOpts(opts);
-  const idx = crypto.randomInt(0, ORDER.length); // 0..36 равновероятно
+  const record = DERIVE.roulette(rng);
+  const idx = record.pocket; // 0..36 равновероятно
   const num = ORDER[idx];
 
   const win = wins(type, value, num);
@@ -42,6 +41,7 @@ export function start(bet, opts) {
     state: { lastIdx: idx },
     view: { number: num, color: colorOf(num), pocketIdx: idx, betType: type, betValue: value ?? null },
     message: `${LABEL[type]} → число ${num}`,
+    fair: { record },
   };
 }
 

@@ -6,9 +6,10 @@
 // Множитель после k безопасных клеток = 0.99 · Π (25−i)/(25−m−i), i = 0..k−1
 // (честная обратная вероятность пройти k клеток, минус 1% дому).
 
-import crypto from 'node:crypto';
+import { minePositions, MINES_CELLS } from '../fair/games.js';
+import { randomRng } from '../fair/node.js';
 
-export const CELLS = 25;
+export const CELLS = MINES_CELLS;
 const EDGE = 0.99;
 const MAX_MULT = 5000;
 
@@ -18,18 +19,13 @@ export function multAfter(mines, k) {
   return Math.min(MAX_MULT, Math.floor(m * 100) / 100);
 }
 
-export function start(bet, opts) {
+export function start(bet, opts, rng = randomRng()) {
   const mines = Math.floor(Number(opts?.mines));
   if (!Number.isInteger(mines) || mines < 1 || mines > 24) throw new Error('BAD_ACTION');
 
-  // выбираем позиции мин частичным Фишером–Йетсом на crypto-рандоме
-  const cells = Array.from({ length: CELLS }, (_, i) => i);
-  for (let i = 0; i < mines; i++) {
-    const j = i + crypto.randomInt(0, CELLS - i);
-    [cells[i], cells[j]] = [cells[j], cells[i]];
-  }
-  const state = { mines, bombs: cells.slice(0, mines).sort((a, b) => a - b), opened: [] };
-  return { finished: false, state, view: view(state) };
+  // позиции мин — частичный Фишер–Йетс на ленте Provably Fair (fair/games.js)
+  const state = { mines, bombs: minePositions(rng, mines), opened: [] };
+  return { finished: false, state, view: view(state), fair: { params: { mines }, record: { bombs: state.bombs } } };
 }
 
 export function act(state, action) {

@@ -1,13 +1,14 @@
 // ─── Плинко ──────────────────────────────────────────────────────────────────
 // Мгновенная игра: шарик падает через 12 рядов колышков, на каждом отскакивает
-// влево или вправо (crypto.randomInt), и попадает в одну из 13 лунок внизу.
+// влево или вправо (лента Provably Fair, fair/), и попадает в одну из 13 лунок внизу.
 // Номер лунки = число отскоков вправо, распределение биномиальное — края редкие.
 // Игрок выбирает риск: чем выше, тем жирнее края и беднее середина.
 // Средний возврат каждой таблицы ≈ 0.99 (1% — дом), проверяется в smoke.js.
 
-import crypto from 'node:crypto';
+import { DERIVE, PLINKO_ROWS } from '../fair/games.js';
+import { randomRng } from '../fair/node.js';
 
-export const ROWS = 12;
+export const ROWS = PLINKO_ROWS;
 
 const sym = (half) => [...half, ...half.slice(0, -1).reverse()];
 export const TABLES = {
@@ -16,11 +17,12 @@ export const TABLES = {
   high: sym([170, 24, 8.1, 2, 0.7, 0.2, 0.2]),
 };
 
-export function start(bet, opts) {
+export function start(bet, opts, rng = randomRng()) {
   const risk = opts?.risk;
   if (!Object.hasOwn(TABLES, risk)) throw new Error('BAD_ACTION');
 
-  const path = Array.from({ length: ROWS }, () => crypto.randomInt(0, 2)); // 0 — влево, 1 — вправо
+  const record = DERIVE.plinko(rng);
+  const path = record.path; // 0 — влево, 1 — вправо
   const slot = path.reduce((s, x) => s + x, 0);
   const mult = TABLES[risk][slot];
 
@@ -31,5 +33,6 @@ export function start(bet, opts) {
     state: {},
     view: { path, slot, mult, risk },
     message: `Лунка ×${mult}`,
+    fair: { record },
   };
 }

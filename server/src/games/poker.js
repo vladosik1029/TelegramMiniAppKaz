@@ -7,6 +7,7 @@
 //   фулл-хаус 9×, каре 25×, стрит-флеш 50×. Ничья — возврат 1×.
 
 import { freshDeck, draw } from '../cards.js';
+import { cardStr } from '../fair/games.js';
 
 const VAL = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, J: 11, Q: 12, K: 13, A: 14 };
 
@@ -68,12 +69,13 @@ export const cmpVec = (a, b) => {
 // выплата по категории при победе
 const PAY = { 0: 2, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 9, 7: 25, 8: 50 };
 
-export function start() {
-  const deck = freshDeck();
+export function start(bet, opts, rng) {
+  const deck = freshDeck(rng);
+  const fair = { record: { deck: deck.map(cardStr) } };
   const player = []; const bot = [];
   for (let i = 0; i < 5; i++) { player.push(draw(deck)); bot.push(draw(deck)); }
   const state = { deck, player, bot, stage: 'draw' };
-  return { state, view: view(state), finished: false };
+  return { state, view: view(state), finished: false, fair };
 }
 
 export function act(state, action = {}) {

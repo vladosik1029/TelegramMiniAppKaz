@@ -18,7 +18,6 @@
 // Модуль не знает про таймеры и деньги: всё это передаёт cardtables.js через ctx.
 
 const RANKS = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-const SUITS = ['♠', '♥', '♦', '♣'];
 const VAL = Object.fromEntries(RANKS.map((r, i) => [r, i]));
 export const MAX_DURAK = 4;
 
@@ -27,12 +26,6 @@ const same = (a, b) => a && b && a.r === b.r && a.s === b.s;
 
 /** Ставка за партию: 10% бай-ина, минимум 1 */
 export const durakStakeOf = (room) => Math.max(1, Math.floor(room.buyIn / 10));
-
-function deck36(shuffle) {
-  const d = [];
-  for (const s of SUITS) for (const r of RANKS) d.push({ s, r });
-  return shuffle(d);
-}
 
 /** Бьёт ли d карту a при козыре trump */
 export const beats = (d, a, trump) =>
@@ -44,7 +37,7 @@ const sortHand = (cards, trump) =>
 export function durakDeal(room, players, ctx) {
   const r = room.round;
   const stake = durakStakeOf(room);
-  r.deck = deck36(ctx.shuffle);
+  // r.deck уже перетасован лентой Provably Fair (cardtables.js, fair/games.js deck36)
   // нижняя карта колоды — козырь, её берут последней
   r.trumpCard = r.deck[0];
   r.trump = r.trumpCard.s;

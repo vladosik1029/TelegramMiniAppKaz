@@ -20,9 +20,17 @@
 // обмена. Ушедший из-за стола посреди раздачи: в Blackjack/Очко его рука
 // останавливается и доигрывается, выигрыш идёт сразу на основной баланс; в
 // покере — фолд, вклад остаётся в банке раздачи.
+//
+// Provably Fair: у каждой раздачи свой server seed, его хэш виден с начала фазы
+// ставок. Колоду тасует лента HMAC(seed, client_seed:номер_раздачи), где
+// client_seed — склейка client seed участников и свежих чисел из их «Готов»
+// (fair/index.js combineSeeds). После раздачи сид раскрывается и каждому
+// участнику пишется раунд в историю проверки.
 
 import { db, tx, changeBalance, addHistory } from './db.js';
-import { freshDeck, draw, handTotal, shuffle } from './cards.js';
+import { draw, handTotal } from './cards.js';
+import { deck52, deck36, cardStr } from './fair/games.js';
+import { rngFor, commitSeed, combineSeeds, cleanEntropy, revealSeed, openRound } from './fair/index.js';
 import { evaluate, cmpVec } from './games/poker.js';
 import {
   MAX_DURAK, durakStakeOf, durakDeal, durakAct, durakAuto, durakLeave, durakPayouts, durakView,
@@ -58,9 +66,11 @@ export const anteOf = (room) => (room.game === 'durak' ? durakStakeOf(room) : Ma
 
 export function newRound(room, prev = null) {
   room.ready.clear();
+  if (prev?.fair?.revealed) room.lastFair = prev.fair;
   return {
     phase: 'betting', hand: prev?.hand ?? 0, stakes: new Map(), rows: new Map(),
     deadline: 0, timer: null, seats: [], turn: -1, dealer: [],
+    fair: commitSeed(), entropy: new Map(), // сид раздачи (хэш виден до ставок) и свежие числа из «Готов»
   };
 }
 
@@ -117,8 +127,26 @@ function settle(room, entries) {
       addHistory(e.id, `${room.game}_room`, e.staked, e.payout - e.staked);
     }
     db.prepare('DELETE FROM room_bets WHERE room_id = ?').run(room.id);
+    revealFair(room, entries);
   });
   room.round.rows.clear();
+}
+
+/** Раздача сыграна: раскрываем сид и пишем раунд каждому участнику (внутри tx) */
+function revealFair(room, entries) {
+  const r = room.round;
+  const f = r.fair;
+  if (!f?.record || f.revealed) return;
+  revealSeed(f.seed);
+  f.revealed = true;
+  for (const e of entries) {
+    const label = r.seats.find(s => s.id === e.id)?.result?.label ?? '';
+    const net = e.payout - e.staked;
+    openRound({
+      userId: e.id, game: `${room.game}_room`, roomId: room.id, hash: f.hash, clientSeed: f.clientSeed,
+      nonce: f.nonce, record: f.record, done: true, summary: `${label} · ${net >= 0 ? '+' : ''}${net}`,
+    });
+  }
 }
 
 const sortedMembers = (room) => [...room.members.values()].sort((a, b) => a.joinedAt - b.joinedAt);
@@ -157,7 +185,7 @@ export function cardClear(room, m) {
   maybeStart(room);
 }
 
-export function cardReady(room, userId, ready) {
+export function cardReady(room, userId, ready, entropy) {
   const r = room.round;
   if (r.phase !== 'betting') fail('HAND_RUNNING');
   if (ready === false) {
@@ -168,6 +196,7 @@ export function cardReady(room, userId, ready) {
       if (m.bank < anteOf(room)) fail('NEED_ANTE');
     } else if (!(r.stakes.get(userId) > 0)) fail('NO_MY_BETS');
     room.ready.add(userId);
+    if (cleanEntropy(entropy)) r.entropy.set(userId, entropy);
   }
   hooks.notify(room, 'ready');
   maybeStart(room);
@@ -216,7 +245,13 @@ function dealCards(room) {
   unschedule(r);
   const players = participants(room, false);
   r.hand += 1;
-  r.deck = freshDeck();
+  // колода из ленты Provably Fair: сид раздачи + сиды всех, кто сел играть
+  const f = r.fair;
+  f.clientSeed = combineSeeds(players.map(m => ({ id: m.id, entropy: r.entropy.get(m.id) })));
+  f.nonce = r.hand;
+  const rng = rngFor(f.seed, f.clientSeed, f.nonce);
+  r.deck = room.game === 'durak' ? deck36(rng) : deck52(rng);
+  f.record = { deck: r.deck.map(cardStr) };
   room.ready.clear();
   if (room.game === 'poker') return pokerDeal(room, players);
   if (room.game === 'durak') return durakDeal(room, players, durakCtx);
@@ -491,7 +526,6 @@ function showdown(room) {
 // ─── Дурак: таймеры и деньги для durak.js ────────────────────────────────────
 
 const durakCtx = {
-  shuffle,
   payAll(room, players, stake) { tx(() => { for (const m of players) pay(room, m, stake); }); },
   scheduleTurn(room, seat) { schedule(room, turnMs(room, seat), () => autoAct(room)); },
   finish(room, loser) { durakFinish(room, loser); },
@@ -577,6 +611,12 @@ export function stakeOf(room, userId) {
 }
 
 const HIDDEN = { hidden: true };
+
+/** Сид раздачи для экрана стола: хэш текущей и раскрытая прошлая */
+export function cardFair(room) {
+  const f = room.round.fair;
+  return { current: f.revealed ? null : f.hash, last: f.revealed ? f : room.lastFair ?? null };
+}
 
 export function cardView(room, userId) {
   const r = room.round;
