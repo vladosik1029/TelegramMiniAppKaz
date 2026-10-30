@@ -70,22 +70,51 @@ export function Hand({ title, cards, total, label }) {
   );
 }
 
+/**
+ * Размер ставки: −1000 / −50 / поле для ручного ввода / +50 / +1000.
+ * Поле держит свой текст, пока игрок печатает, а в bet попадает уже зажатое
+ * в [1, баланс] число (пустое поле на blur возвращает текущую ставку).
+ */
+export function BetStepper({ balance, bet, setBet, disabled }) {
+  const max = Math.max(balance, 1);
+  const clamp = (v) => Math.max(1, Math.min(Math.floor(Number(v) || 0), max));
+  const [text, setText] = useState(String(bet));
+  const [editing, setEditing] = useState(false);
+  useEffect(() => { if (!editing) setText(String(bet)); }, [bet, editing]);
+
+  const step = (d) => { haptic('light'); setBet(clamp(bet + d)); };
+  return (
+    <div className="bet-row bet-stepper">
+      <button className="chip" disabled={disabled || bet <= 1} onClick={() => step(-1000)}>−1000</button>
+      <button className="chip" disabled={disabled || bet <= 1} onClick={() => step(-50)}>−50</button>
+      <label className="bet-input-wrap">
+        <input
+          className="bet-input"
+          type="text" inputMode="numeric" pattern="[0-9]*"
+          disabled={disabled}
+          value={text}
+          onFocus={(e) => { setEditing(true); e.target.select(); }}
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+            setText(digits);
+            if (digits) setBet(clamp(digits));
+          }}
+          onBlur={() => { setEditing(false); setText(String(bet)); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+        />
+        <span>🪙</span>
+      </label>
+      <button className="chip" disabled={disabled || bet >= max} onClick={() => step(50)}>+50</button>
+      <button className="chip" disabled={disabled || bet >= max} onClick={() => step(1000)}>+1000</button>
+    </div>
+  );
+}
+
 export function BetBar({ balance, bet, setBet, disabled, onDeal, label = 'Раздать карты', busyLabel = 'Раунд идёт…', canDeal = true, children }) {
-  const clamp = (v) => Math.max(1, Math.min(Number(v) || 0, Math.max(balance, 1)));
   const presets = [10, 50, 100, 500];
   return (
     <div className="betbar">
-      <div className="bet-row">
-        <button className="chip" disabled={disabled} onClick={() => { haptic('light'); setBet(clamp(bet - 10)); }}>−10</button>
-        <motion.div
-          key={bet}
-          className="bet-value"
-          initial={{ scale: 1.25 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 550, damping: 24 }}
-        >{bet.toLocaleString('ru-RU')} 🪙</motion.div>
-        <button className="chip" disabled={disabled} onClick={() => { haptic('light'); setBet(clamp(bet + 10)); }}>+10</button>
-      </div>
+      <BetStepper balance={balance} bet={bet} setBet={setBet} disabled={disabled} />
       <div className="preset-row">
         {presets.map(p => (
           <motion.button whileTap={{ scale: .9 }} key={p} className="chip small" disabled={disabled} onClick={() => { haptic('light'); setBet(Math.min(p, balance)); }}>{p}</motion.button>
