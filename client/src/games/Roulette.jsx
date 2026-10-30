@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
-import { ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
+import { ResultBanner, BetStepper, actionsStagger, actionsItem } from '../components/ui.jsx';
 import Wheel, { ROULETTE_BETS as BETS, COLOR_NAME, NumberStrip } from '../components/Wheel.jsx';
 
 const SPIN_S = 4.2;
@@ -36,7 +36,6 @@ export default function Roulette({ profile, refresh }) {
   };
 
   const presets = [10, 50, 100, 500];
-  const clamp = (v) => Math.max(1, Math.min(Number(v) || 0, Math.max(balance, 1)));
   const canSpin = !busy && bet >= 1 && bet <= balance && (bType !== 'num' || num != null);
 
   return (
@@ -65,14 +64,7 @@ export default function Roulette({ profile, refresh }) {
       {/* ─── панель ставки ──────────────────────────────── */}
       {!result && (
         <div className="betbar">
-          <div className="bet-row">
-            <button className="chip" disabled={busy} onClick={() => { haptic('light'); setBet(clamp(bet - 10)); }}>−10</button>
-            <motion.div key={bet} className="bet-value" initial={{ scale: 1.25 }} animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 550, damping: 24 }}>
-              {bet.toLocaleString('ru-RU')} 🪙
-            </motion.div>
-            <button className="chip" disabled={busy} onClick={() => { haptic('light'); setBet(clamp(bet + 10)); }}>+10</button>
-          </div>
+          <BetStepper balance={balance} bet={bet} setBet={setBet} disabled={busy} />
           <div className="preset-row">
             {presets.map(p => (
               <motion.button whileTap={{ scale: .9 }} key={p} className="chip small" disabled={busy}
