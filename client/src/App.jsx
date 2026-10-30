@@ -100,12 +100,6 @@ export default function App() {
         >
           {tab === 'games' && (
             <main className="home">
-              <div className="hero">
-                <div className="hero-glow" aria-hidden />
-                <div className="hero-suits" aria-hidden>♠ ♥ ♦ ♣</div>
-                <div className="hero-title">Казино на фантики</div>
-                <div className="hero-sub">{GAMES.length} игр · честный рандом на сервере</div>
-              </div>
               {GROUPS.map(gr => (
                 <section key={gr.id}>
                   <h3 className="section-title">{gr.title}</h3>

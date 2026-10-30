@@ -421,24 +421,26 @@ function RoomScreen({ roomId, profile, onExit }) {
           />
         </div>
 
-        {room.recent.length > 0 && (
-          <div className="recent-strip">
-            {room.recent.map((n, i) => (
-              <span key={`${room.recent.length}-${i}`} className={`recent-num ${colorOf(n)} ${i === 0 && pendingSpin.current ? 'hidden' : ''}`}>{n}</span>
-            ))}
-          </div>
-        )}
+        <div className="recent-strip">
+          {room.recent.map((n, i) => (
+            <span key={`${room.recent.length}-${i}`} className={`recent-num ${colorOf(n)} ${i === 0 && pendingSpin.current ? 'hidden' : ''}`}>{n}</span>
+          ))}
+        </div>
 
-        <AnimatePresence>
-          {shownSpin && myResult && (
-            <motion.div key={shownSpin.seq} className={`result-banner ${myResult.net > 0 ? 'win' : myResult.net < 0 ? 'lose' : 'push'}`}
-              initial={{ scale: .8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 16 }}>
-              {myResult.net > 0 ? `✅ +${fmt(myResult.net)} 🪙` : myResult.net < 0 ? `❌ ${fmt(myResult.net)} 🪙` : '🤝 В ноль'}
-              <div className="result-extra">{shownSpin.number} — {COLOR_NAME[shownSpin.color]} · поставил {fmt(myResult.staked)}</div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* слот фиксированной высоты: появление итога не сдвигает страницу */}
+        <div className="room-result-slot">
+          {!(shownSpin && myResult) && <div className="room-result-idle">Итог раунда появится здесь</div>}
+          <AnimatePresence>
+            {shownSpin && myResult && (
+              <motion.div key={shownSpin.seq} className={`result-banner ${myResult.net > 0 ? 'win' : myResult.net < 0 ? 'lose' : 'push'}`}
+                initial={{ scale: .8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 16 }}>
+                {myResult.net > 0 ? `✅ +${fmt(myResult.net)} 🪙` : myResult.net < 0 ? `❌ ${fmt(myResult.net)} 🪙` : '🤝 В ноль'}
+                <div className="result-extra">{shownSpin.number} — {COLOR_NAME[shownSpin.color]} · поставил {fmt(myResult.staked)}</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* игроки */}
@@ -514,11 +516,10 @@ function RoomScreen({ roomId, profile, onExit }) {
             </motion.button>
           )}
         </div>
-        {!spinning && (
-          <div className="hint ready-hint">
-            Готовы {readyCount} из {waitFor.length}. Колесо закрутится, когда все сделают ставки и нажмут «Готов».
-          </div>
-        )}
+        <div className="hint ready-hint">
+          {spinning ? 'Ставки закрыты до остановки колеса.'
+            : `Готовы ${readyCount} из ${waitFor.length}. Колесо закрутится, когда все сделают ставки и нажмут «Готов».`}
+        </div>
       </div>
 
       <button className="btn danger big room-leave" onClick={leave}>
