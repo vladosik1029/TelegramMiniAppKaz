@@ -5,6 +5,10 @@
 import * as bj from './games/blackjack.js';
 import * as ochko from './games/ochko.js';
 import * as poker from './games/poker.js';
+import * as dice from './games/dice.js';
+import * as slots from './games/slots.js';
+import * as mines from './games/mines.js';
+import * as hilo from './games/hilo.js';
 
 const assert = (cond, msg) => { if (!cond) { console.error('FAIL:', msg); process.exitCode = 1; } };
 
@@ -104,3 +108,57 @@ for (let i = 0; i < 3000; i++) {
 }
 console.log(`\nПокер (разумная стратегия): игрок ${pWin} / бот ${bWin} / ничья ${tied}; средний возврат = ${(payout / stake).toFixed(3)}`);
 console.log('Категории рук игрока:', cat);
+
+// ── новые игры: инварианты и средний возврат ────────────────────────────────
+const rtp = (name, n, round) => {
+  let paid = 0;
+  for (let i = 0; i < n; i++) {
+    const m = round();
+    assert(Number.isFinite(m) && m >= 0, `${name} mult ok: ${m}`);
+    paid += m;
+  }
+  console.log(`${name}: средний возврат = ${(paid / n).toFixed(3)}`);
+};
+
+rtp('Кости (меньше 50)', 40000, () => dice.start(10, { dir: 'under', target: 50 }).returnMult);
+rtp('Кости (больше 90)', 40000, () => dice.start(10, { dir: 'over', target: 90 }).returnMult);
+let badDice = 0;
+for (const o of [null, {}, { dir: 'under', target: 1 }, { dir: 'over', target: 99 }, { dir: 'x', target: 50 }]) {
+  try { dice.start(10, o); } catch { badDice++; }
+}
+assert(badDice === 5, 'dice отклоняет плохие opts');
+
+rtp('Слоты', 40000, () => slots.start().returnMult);
+
+// сапёр: открываем 3 случайные клетки и забираем
+rtp('Сапёр (3 мины, 3 клетки)', 20000, () => {
+  const s = mines.start(10, { mines: 3 });
+  assert(s.view.bombs === null, 'mines не светит бомбы до конца');
+  let st = s.state, r;
+  const order = [...Array(25).keys()].sort(() => Math.random() - .5);
+  for (let k = 0; k < 3; k++) {
+    r = mines.act(st, 'open:' + order[k]);
+    if (r.finished) return r.returnMult;
+    st = r.state;
+  }
+  return mines.act(st, 'cashout').returnMult;
+});
+{
+  // полное прохождение с 24 минами: одна безопасная клетка → сразу выплата
+  const s = mines.start(10, { mines: 24 });
+  const safe = [...Array(25).keys()].find(i => !s.state.bombs.includes(i));
+  const r = mines.act(s.state, 'open:' + safe);
+  assert(r.finished && r.returnMult === 24.75, 'mines 24 cleared ×24.75: ' + r.returnMult);
+}
+
+// выше/ниже: всегда выбираем более вероятное направление, 2 шага и забираем
+rtp('Выше/Ниже (2 шага)', 40000, () => {
+  let st = hilo.start().state, r;
+  for (let k = 0; k < 2; k++) {
+    const v = hilo.view(st);
+    r = hilo.act(st, v.hi.chance >= v.lo.chance ? 'hi' : 'lo');
+    if (r.finished) return r.returnMult;
+    st = r.state;
+  }
+  return hilo.act(st, 'cashout').returnMult;
+});

@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api.js';
 import { ResultBanner } from './ui.jsx';
 
-const GAME_NAMES = { blackjack: 'Blackjack', ochko: 'Очко', poker: 'Покер' };
+const GAME_NAMES = {
+  blackjack: 'Blackjack', ochko: 'Очко', poker: 'Покер', roulette: 'Рулетка',
+  slots: 'Слоты', mines: 'Сапёр', hilo: 'Выше / Ниже', dice: 'Кости',
+};
 
 export default function Wallet({ profile, refresh }) {
   const [history, setHistory] = useState(profile.history || []);
