@@ -183,4 +183,7 @@
   color: var(--muted); font-size: 13px; font-weight: 700;
   border: 1px dashed #2b4a35; border-radius: 12px; min-height: 46px;
 }
+.player-ready { font-size: 11px; font-weight: 800; color: var(--green); background: rgba(46, 204, 113, .12); border-radius: 999px; padding: 1px 7px; }
+.btn.ready-on { border-color: var(--green); color: var(--green); background: rgba(46, 204, 113, .12); }
+.ready-hint { margin-top: 8px; text-align: center; }
 .room-leave { display: block; width: 100%; margin-top: 12px; }
