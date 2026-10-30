@@ -203,22 +203,42 @@ body {
 .bottombar {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 480px;
-  display: flex;
-  background: rgba(15, 27, 20, .92); backdrop-filter: blur(10px);
+  display: flex; gap: 8px;
+  background: rgba(15, 27, 20, .94); backdrop-filter: blur(10px);
   border-top: 1px solid #24402d;
-  padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, .35);
 }
 .bottombar button {
-  flex: 1; background: none; border: none; color: var(--muted);
-  font-size: 13px; font-weight: 700; padding: 10px 0; border-radius: 10px; cursor: pointer;
+  flex: 1; cursor: pointer;
+  background: var(--card);
+  border: 1px solid #2b4a35; border-radius: 12px;
+  color: var(--muted);
+  font-size: 13px; font-weight: 700; padding: 10px 0;
+  transition: transform .06s, border-color .15s, color .15s;
+  min-width: 0;
 }
-.bottombar button.active { color: var(--gold); background: var(--card); }
+.bottombar button:active { transform: scale(.95); }
+.bottombar button.active {
+  color: var(--gold);
+  background: linear-gradient(160deg, var(--card), var(--bg2));
+  border-color: var(--gold2);
+  box-shadow: inset 0 0 0 1px rgba(230, 192, 101, .12), 0 2px 8px rgba(0, 0, 0, .3);
+}
 
 .game-screen { padding-top: 4px; }
 
 /* ─── правила ───────────────────────────────────────── */
+.rules {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 6px;
+}
 .rules-controls {
-  display: flex; gap: 6px; margin-bottom: 12px;
+  width: 100%; max-width: 420px;
+  display: flex; gap: 6px;
+  margin: 0 auto 14px;
 }
 .rules-pill {
   flex: 1; background: var(--bg2); color: var(--muted);
@@ -233,11 +253,13 @@ body {
 }
 .rules-pill-icon { font-size: 14px; }
 
+.rules > div { width: 100%; max-width: 420px; }
+
 .rules-card {
   background: linear-gradient(160deg, var(--card), var(--bg2));
   border: 1px solid #2b4a35; border-radius: var(--radius);
-  padding: 16px 14px 18px; margin-top: 10px;
-  margin-bottom: 8px;
+  padding: 16px 14px 18px;
+  margin: 0 auto 14px;
 }
 .rules-card > .rules-block:last-child { margin-bottom: 0; }
 .rules-title { font-size: 20px; font-weight: 900; color: var(--gold); }
