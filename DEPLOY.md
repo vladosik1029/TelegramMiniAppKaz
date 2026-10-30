@@ -24,7 +24,7 @@ Telegram → https://poker.izzinet.xyz (Caddy + Let's Encrypt)
   Enable Mini App → URL `https://poker.izzinet.xyz`.
 - Если username бота другой — `BOT_USERNAME=<username>` в `server/.env`.
 - Проверка ws после деплоя (ожидаем `HTTP/1.1 401` — сокет жив, просто без initData):
-  `curl -si -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGVzdA==' https://poker.izzinet.xyz/ws | head -1`
+  `curl -si --http1.1 -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGVzdA==' https://poker.izzinet.xyz/ws | head -1`
 
 ## Обновление кода на сервере
 
