@@ -22,6 +22,7 @@ export const ROOM_GAMES = {
   blackjack: { title: 'Blackjack', icon: '🂡', ready: true },
   ochko: { title: 'Очко', icon: '♠️', ready: true },
   poker: { title: 'Покер', icon: '🂱', ready: true },
+  durak: { title: 'Дурак', icon: '🃏', ready: true },
 };
 
 export const MAX_PLAYERS = 8;
@@ -41,7 +42,8 @@ export const ROOM_ERRORS = {
   HAND_RUNNING: 'Идёт раздача — дождись следующей',
   NOT_YOUR_TURN: 'Сейчас не твой ход',
   CANT_RAISE: 'Повышать больше нельзя',
-  NEED_ANTE: 'В банке стола не хватает фишек на анте',
+  NEED_ANTE: 'В банке стола не хватает фишек на ставку партии',
+  BAD_MOVE: 'Этой картой сейчас ходить нельзя',
   BANK_LOW: 'В банке стола не хватает фишек',
   BAD_ROOM: 'Некорректные параметры стола',
   GAME_SOON: 'Эта игра для столов пока в разработке',

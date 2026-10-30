@@ -257,3 +257,57 @@
 .ct-felt .result-banner { margin-top: 10px; }
 .ct-panel .actions { flex-wrap: nowrap; }
 .ct-panel .actions .btn { flex: 1; min-width: 0; padding-left: 6px; padding-right: 6px; }
+
+/* ─── Дурак ─────────────────────────────────────────── */
+.dk-opps { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+.dk-opp {
+  flex: 1 1 0; min-width: 96px; max-width: 200px; text-align: center;
+  border: 1px solid #2b4a35; border-radius: 12px; padding: 6px 8px; background: rgba(0, 0, 0, .18);
+}
+.dk-opp.active { border-color: var(--gold); box-shadow: 0 0 14px rgba(230, 192, 101, .3); }
+.dk-opp.out { opacity: .6; }
+.dk-opp-name { font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-backs { display: flex; align-items: center; justify-content: center; margin-top: 4px; height: 34px; }
+.dk-back {
+  width: 22px; height: 32px; margin-left: -12px; border-radius: 4px; border: 1px solid #3a6b4c;
+  background: repeating-linear-gradient(45deg, #2e5c3f 0 4px, #244a33 4px 8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+}
+.dk-back:first-child { margin-left: 0; }
+.dk-backs b { margin-left: 8px; color: var(--gold); font-size: 13px; }
+.dk-reveal { justify-content: center; }
+.dk-middle { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: center; min-height: 120px; }
+.dk-deck { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dk-deck-cards { position: relative; display: flex; height: 72px; }
+.dk-deck-cards .card { width: 50px; height: 72px; }
+.dk-deck-cards .card-suit-big { font-size: 24px; }
+.dk-pile { box-shadow: 2px 2px 0 #1f3d2b, 4px 4px 0 #18301f; border-radius: 8px; }
+.dk-pile + .dk-trump { margin-left: -14px; transform: rotate(10deg); }
+.dk-deck small { font-size: 11px; color: var(--muted); }
+.dk-trump-suit { font-size: 12px; font-weight: 900; padding: 1px 8px; border-radius: 999px; background: var(--card-face); }
+.dk-trump-suit.red { color: #c0392b; }
+.dk-trump-suit.black { color: #17181a; }
+.dk-table { display: flex; flex-wrap: wrap; gap: 6px 4px; align-content: center; min-height: 110px; }
+.dk-pair { position: relative; width: 56px; height: 100px; }
+.dk-pair .card { width: 50px; height: 72px; }
+.dk-pair .card-suit-big { font-size: 24px; }
+.dk-cover { position: absolute; left: 10px; top: 24px; transform: rotate(8deg); }
+.dk-meta { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; font-size: 11px; color: var(--muted); }
+.dk-my-result { text-align: center; }
+.dk-hand-wrap { margin: 4px 0 8px; }
+.dk-hand-title { font-size: 12px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
+.dk-hand { display: flex; justify-content: center; padding-top: 10px; }
+.dk-card {
+  background: none; border: none; padding: 0; margin-left: 3px; cursor: default;
+  transition: transform .15s;
+}
+.dk-card:first-child { margin-left: 0; }
+.dk-card .card { width: 54px; height: 78px; }
+.dk-card .card-suit-big { font-size: 26px; }
+.dk-card:disabled .card { filter: brightness(.72); }
+.dk-card.ok { cursor: pointer; transform: translateY(-8px); }
+.dk-card.ok .card { box-shadow: 0 0 0 2px var(--gold), 0 6px 14px rgba(0, 0, 0, .5); }
+.dk-card.trump .card::after { content: '★'; position: absolute; left: 5px; bottom: 3px; font-size: 10px; color: var(--gold2); }
+.dk-hand.many .dk-card { margin-left: -22px; }
+.dk-hand .dk-card:first-child { margin-left: 0; }
+@media (min-width: 700px) { .dk-hand.many .dk-card { margin-left: -8px; } .dk-card .card { width: 62px; height: 88px; } }

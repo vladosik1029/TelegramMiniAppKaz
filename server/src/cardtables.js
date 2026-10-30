@@ -22,10 +22,16 @@
 // покере — фолд, вклад остаётся в банке раздачи.
 
 import { db, tx, changeBalance, addHistory } from './db.js';
-import { freshDeck, draw, handTotal } from './cards.js';
+import { freshDeck, draw, handTotal, shuffle } from './cards.js';
 import { evaluate, cmpVec } from './games/poker.js';
+import {
+  MAX_DURAK, durakStakeOf, durakDeal, durakAct, durakAuto, durakLeave, durakPayouts, durakView,
+  durakActions,
+} from './durak.js';
 
-export const CARD_GAMES = new Set(['blackjack', 'ochko', 'poker']);
+export const CARD_GAMES = new Set(['blackjack', 'ochko', 'poker', 'durak']);
+/** Игры, где игроки играют друг против друга и «Готов» = сесть в партию */
+const PVP = new Set(['poker', 'durak']);
 
 // тайминги можно ужать через env для тестов (test/cards.js)
 const ms = (name, def) => Number(process.env[name]) || def;
@@ -47,8 +53,8 @@ const total = (cards) => handTotal(cards).total;
 const isTwentyOne = (cards) => cards.length === 2 && total(cards) === 21;
 const isPanPan = (cards) => cards.length === 2 && cards.every(c => c.s === '♠');
 
-/** Анте покерного стола: 5% бай-ина, минимум 1 */
-export const anteOf = (room) => Math.max(1, Math.floor(room.buyIn / 20));
+/** Анте покерного стола: 5% бай-ина, минимум 1; в дураке — ставка за партию */
+export const anteOf = (room) => (room.game === 'durak' ? durakStakeOf(room) : Math.max(1, Math.floor(room.buyIn / 20)));
 
 export function newRound(room, prev = null) {
   room.ready.clear();
@@ -121,7 +127,7 @@ const sortedMembers = (room) => [...room.members.values()].sort((a, b) => a.join
 
 export function cardBet(room, m, amount) {
   const r = room.round;
-  if (room.game === 'poker') fail('BAD_ACTION');
+  if (PVP.has(room.game)) fail('BAD_ACTION');
   if (r.phase !== 'betting') fail('HAND_RUNNING');
   amount = Math.floor(Number(amount));
   if (!Number.isInteger(amount) || amount < 1) fail('BAD_BET');
@@ -158,7 +164,7 @@ export function cardReady(room, userId, ready) {
     room.ready.delete(userId);
   } else {
     const m = room.members.get(userId);
-    if (room.game === 'poker') {
+    if (PVP.has(room.game)) {
       if (m.bank < anteOf(room)) fail('NEED_ANTE');
     } else if (!(r.stakes.get(userId) > 0)) fail('NO_MY_BETS');
     room.ready.add(userId);
@@ -170,9 +176,10 @@ export function cardReady(room, userId, ready) {
 /** Кто сядет в раздачу, если начать её прямо сейчас */
 function participants(room, onlyReady) {
   const r = room.round;
-  if (room.game === 'poker') {
+  if (PVP.has(room.game)) {
     const ante = anteOf(room);
-    return sortedMembers(room).filter(m => room.ready.has(m.id) && m.bank >= ante);
+    const ready = sortedMembers(room).filter(m => room.ready.has(m.id) && m.bank >= ante);
+    return room.game === 'durak' ? ready.slice(0, MAX_DURAK) : ready;
   }
   return sortedMembers(room).filter(m => r.stakes.get(m.id) > 0 && (!onlyReady || room.ready.has(m.id)));
 }
@@ -180,14 +187,14 @@ function participants(room, onlyReady) {
 /** Кто держит раздачу: онлайн и есть чем играть */
 function mustBeReady(room) {
   const r = room.round;
-  const need = room.game === 'poker' ? anteOf(room) : 1;
+  const need = PVP.has(room.game) ? anteOf(room) : 1;
   return sortedMembers(room).filter(m => hooks.isOnline(room, m.id) && (m.bank >= need || r.stakes.get(m.id) > 0));
 }
 
 function maybeStart(room) {
   const r = room.round;
   if (r.phase !== 'betting') return;
-  const min = room.game === 'poker' ? 2 : 1;
+  const min = PVP.has(room.game) ? 2 : 1;
   const readyPlayers = participants(room, true);
   if (readyPlayers.length < min) { unschedule(r); return; }
   if (mustBeReady(room).every(m => room.ready.has(m.id))) { deal(room); return; }
@@ -212,6 +219,7 @@ function dealCards(room) {
   r.deck = freshDeck();
   room.ready.clear();
   if (room.game === 'poker') return pokerDeal(room, players);
+  if (room.game === 'durak') return durakDeal(room, players, durakCtx);
 
   r.dealer = [draw(r.deck), draw(r.deck)];
   r.seats = players.map(m => ({
@@ -247,6 +255,7 @@ function nextTurn(room, from) {
 
 function autoAct(room) {
   const r = room.round;
+  if (room.game === 'durak') return durakAuto(room, durakCtx);
   if (room.game === 'poker') {
     const s = r.seats[r.turn];
     if (r.phase === 'draw') return pokerAct(room, s, { action: 'draw', discard: [] });
@@ -263,6 +272,7 @@ export function cardAct(room, userId, msg = {}) {
   if (!['playing', 'bet1', 'draw', 'bet2'].includes(r.phase) || !s) fail('BAD_ACTION');
   if (s.id !== userId) fail('NOT_YOUR_TURN');
   if (room.game === 'poker') pokerAct(room, s, msg);
+  else if (room.game === 'durak') durakAct(room, s, msg, durakCtx);
   else bjAct(room, s, String(msg.action || ''));
   hooks.notify(room, 'act');
 }
@@ -478,6 +488,29 @@ function showdown(room) {
   schedule(room, POKER_RESULT_MS, () => { room.round = newRound(room, r); });
 }
 
+// ─── Дурак: таймеры и деньги для durak.js ────────────────────────────────────
+
+const durakCtx = {
+  shuffle,
+  payAll(room, players, stake) { tx(() => { for (const m of players) pay(room, m, stake); }); },
+  scheduleTurn(room, seat) { schedule(room, turnMs(room, seat), () => autoAct(room)); },
+  finish(room, loser) { durakFinish(room, loser); },
+};
+
+function durakFinish(room, loser) {
+  const r = room.round;
+  unschedule(r);
+  const entries = durakPayouts(r, loser).map(({ s, payout, label }) => {
+    s.result = { payout, net: payout - s.stake, label, outcome: payout > s.stake ? 'win' : payout === s.stake ? 'push' : 'lose' };
+    return { id: s.id, staked: s.stake, payout };
+  });
+  settle(room, entries);
+  r.loserId = loser?.id ?? null;
+  r.phase = 'results';
+  r.turn = -1;
+  schedule(room, POKER_RESULT_MS, () => { room.round = newRound(room, r); });
+}
+
 // ─── выход и онлайн ──────────────────────────────────────────────────────────
 
 /**
@@ -499,7 +532,9 @@ export function cardLeave(room, userId) {
   const myTurn = r.seats[r.turn] === s;
   const last = room.members.size === 1;
 
-  if (room.game === 'poker') {
+  if (room.game === 'durak') {
+    durakLeave(room, s, durakCtx);
+  } else if (room.game === 'poker') {
     if (!s.folded) {
       const others = activeSeats(r).filter(x => x !== s);
       if (others.length) {
@@ -537,6 +572,7 @@ export function stakeOf(room, userId) {
   if (r.phase === 'betting') return r.stakes.get(userId) ?? 0;
   const s = r.seats.find(x => x.id === userId);
   if (!s) return 0;
+  if (room.game === 'durak') return s.stake;
   return room.game === 'poker' ? s.contrib : s.stake * s.units;
 }
 
@@ -559,7 +595,13 @@ export function cardView(room, userId) {
     seats: r.seats.map(s => {
       const own = s.id === userId;
       const seat = { id: s.id, name: s.name, left: s.left, result: results ? s.result : null };
-      if (room.game === 'poker') {
+      if (room.game === 'durak') {
+        Object.assign(seat, {
+          count: s.hand.length, out: s.out, place: s.place, stake: s.stake,
+          // после партии видно, с чем остался дурак
+          cards: results && s.hand.length ? s.hand : [],
+        });
+      } else if (room.game === 'poker') {
         const reveal = own || (results && r.showdown && !s.folded);
         Object.assign(seat, {
           cards: reveal ? s.cards : s.cards.map(() => HIDDEN),
@@ -577,7 +619,10 @@ export function cardView(room, userId) {
     you: { inHand: !!me, actions: [] },
   };
 
-  if (room.game === 'poker') {
+  if (room.game === 'durak') {
+    view.ante = anteOf(room);
+    view.durak = durakView(r, userId);
+  } else if (room.game === 'poker') {
     Object.assign(view, {
       ante: anteOf(room), pot: r.pot ?? 0, curBet: r.curBet ?? 0, betSize: r.betSize ?? 0,
       cap: r.cap ?? 0, raises: r.raises ?? 0, maxRaises: MAX_RAISES,
@@ -588,7 +633,10 @@ export function cardView(room, userId) {
   }
 
   if (turnSeat && turnSeat.id === userId && !turnSeat.left) {
-    if (room.game === 'poker') {
+    if (room.game === 'durak') {
+      view.you.actions = durakActions(r);
+      view.you.canPlay = view.durak.playable.length > 0;
+    } else if (room.game === 'poker') {
       if (r.phase === 'draw') view.you.actions = ['draw'];
       else {
         const toCall = r.curBet - turnSeat.roundBet;
