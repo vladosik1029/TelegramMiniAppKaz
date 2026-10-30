@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { haptic } from '../api.js';
+import { CoinBurst } from './fx.jsx';
 
 const colorOf = (c) => (c.s === '♥' || c.s === '♦' ? 'red' : 'black');
 
@@ -69,7 +70,7 @@ export function Hand({ title, cards, total, label }) {
   );
 }
 
-export function BetBar({ balance, bet, setBet, disabled, onDeal }) {
+export function BetBar({ balance, bet, setBet, disabled, onDeal, label = 'Раздать карты', busyLabel = 'Раунд идёт…', canDeal = true, children }) {
   const clamp = (v) => Math.max(1, Math.min(Number(v) || 0, Math.max(balance, 1)));
   const presets = [10, 50, 100, 500];
   return (
@@ -91,13 +92,14 @@ export function BetBar({ balance, bet, setBet, disabled, onDeal }) {
         ))}
         <motion.button whileTap={{ scale: .9 }} className="chip small" disabled={disabled} onClick={() => { haptic('light'); setBet(balance); }}>Все 🪙</motion.button>
       </div>
+      {children}
       <motion.button
         whileTap={{ scale: .96 }}
         className="btn primary big"
-        disabled={disabled || bet < 1 || bet > balance}
+        disabled={disabled || !canDeal || bet < 1 || bet > balance}
         onClick={onDeal}
       >
-        {disabled ? 'Раунд идёт…' : 'Раздать карты'}
+        {disabled ? busyLabel : label}
       </motion.button>
       {bet > balance && <div className="hint">Ставка больше баланса — уменьши её</div>}
     </div>
@@ -130,6 +132,7 @@ export function ResultBanner({ result, extra }) {
       animate={{ scale: 1, opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 380, damping: 15 }}
     >
+      {result.outcome === 'win' && <CoinBurst count={result.net >= 500 ? 22 : 12} />}
       <div>{text}</div>
       {extra && <motion.div className="result-extra" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: .15 } }}>{extra}</motion.div>}
     </motion.div>

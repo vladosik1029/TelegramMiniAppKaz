@@ -7,6 +7,10 @@ import * as blackjack from './games/blackjack.js';
 import * as ochko from './games/ochko.js';
 import * as poker from './games/poker.js';
 import * as roulette from './games/roulette.js';
+import * as dice from './games/dice.js';
+import * as slots from './games/slots.js';
+import * as mines from './games/mines.js';
+import * as hilo from './games/hilo.js';
 
 export const api = Router();
 
@@ -79,7 +83,7 @@ function me(user) {
 }
 
 // ─── игровой движок ──────────────────────────────────────────────────────────
-const GAMES = { blackjack, ochko, poker, roulette };
+const GAMES = { blackjack, ochko, poker, roulette, dice, slots, mines, hilo };
 
 function validateBet(bet) {
   bet = Math.floor(Number(bet));
