@@ -238,3 +238,34 @@
 
 /* главная кнопка панели ставки — всегда во всю ширину */
 .betbar > .btn.big { display: block; width: 100%; margin-top: 4px; }
+
+/* ─── Ракета (краш) ─────────────────────────────────── */
+.crash-felt { padding: 12px; position: relative; }
+.crash-recent { display: flex; gap: 4px; overflow: hidden; margin-bottom: 8px; min-height: 22px; }
+.crash-pill { flex: 0 0 auto; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: rgba(255, 255, 255, .06); }
+.crash-pill.bad { color: #f0a7ab; }
+.crash-pill.good { color: #8fe0b0; }
+.crash-pill.gold { color: #1b1407; background: var(--gold); }
+.crash-graph { position: relative; height: 190px; border-radius: 12px; background: rgba(0, 0, 0, .22); overflow: hidden; }
+.crash-graph svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.crash-grid { stroke: rgba(255, 255, 255, .06); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.crash-line { fill: none; stroke: var(--gold); stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.crash-line.crashed { stroke: #e2554a; }
+.crash-area { fill: rgba(230, 192, 101, .14); }
+.crash-area.crashed { fill: rgba(226, 85, 74, .14); }
+.crash-rocket { position: absolute; font-size: 28px; line-height: 1; pointer-events: none; filter: drop-shadow(0 0 8px rgba(255, 180, 60, .6)); }
+.crash-center { position: absolute; left: 0; right: 0; top: 50px; text-align: center; pointer-events: none; }
+.crash-big { font-size: 44px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 3px 12px rgba(0, 0, 0, .6); }
+.crash-big.live { color: var(--gold); }
+.crash-big.live.mine { color: #8fe0b0; }
+.crash-big.boom { color: #ff6b5e; }
+.crash-sub { font-size: 13px; color: var(--muted); font-weight: 700; }
+.crash-auto { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+.crash-auto-toggle { display: flex; align-items: center; gap: 6px; flex: 1; font-size: 13px; color: var(--muted); cursor: pointer; }
+.crash-auto-toggle input { width: 18px; height: 18px; accent-color: var(--gold); }
+.crash-auto-input { flex: 0 0 96px; }
+.crash-auto-input.off { opacity: .45; }
+.crash-cashout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.crash-cashout small { font-size: 14px; opacity: .8; }
+.crash-panel .actions { align-items: stretch; }
+.crash-players-head { font-size: 12px; font-weight: 800; color: var(--gold); margin: 6px 2px 2px; }
