@@ -4,6 +4,7 @@ import express from 'express';
 import { env } from './telegram.js';
 import { api } from './routes.js';
 import { bootRooms } from './rooms.js';
+import { bootCrash } from './crash.js';
 import { attachWs } from './ws.js';
 
 const app = express();
@@ -30,6 +31,7 @@ if (fs.existsSync(clientDist)) {
 }
 
 bootRooms();
+bootCrash();
 
 const server = app.listen(env.PORT, () => {
   console.log(`Casino API: http://localhost:${env.PORT}`);

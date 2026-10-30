@@ -2,6 +2,7 @@
 // Подключение: wss://<host>/ws?t=<initData> (в DEV_MODE: пусто = dev-игрок,
 // либо «dev:<id>» — мок-игрок для тестов с двумя клиентами).
 // Клиент → сервер: { op: 'sub'|'bet'|'clear'|'ready'|'act'|'leave'|'refresh', roomId?, ...; rid? }
+// Краш: { op: 'crash_sub'|'crash_unsub'|'crash_bet'|'crash_cancel'|'crash_cashout' } → { type: 'crash', crash }
 // Сервер → клиент: { type: 'room', room } — персональное состояние стола после
 // каждого изменения; { type: 'left', roomId, cashout, balance }; { type: 'closed', roomId };
 // { type: 'error', error, rid }; { type: 'ok', rid }.
@@ -12,6 +13,7 @@ import {
   getRoom, roomState, placeBet, clearBets, setReady, playAction, leaveRoom,
   socketAttached, socketDetached, onRoomChange,
 } from './rooms.js';
+import { crashView, crashBet, crashCancel, crashCashout, onCrashChange } from './crash.js';
 
 const HEARTBEAT_MS = 30_000;
 
@@ -57,6 +59,13 @@ export function attachWs(server) {
     }
   });
 
+  // Краш: общий раунд — состояние всем, кто открыл игру
+  onCrashChange((event) => {
+    for (const ws of wss.clients) {
+      if (ws.crash) send(ws, { type: 'crash', event, crash: crashView(ws.user.id) });
+    }
+  });
+
   wss.on('connection', (ws) => {
     ws.on('pong', () => { ws.alive = true; });
     ws.on('close', () => unsub(ws));
@@ -92,6 +101,14 @@ export function attachWs(server) {
             send(ws, { type: 'left', roomId, ...r });
             break;
           }
+          case 'crash_sub':
+            ws.crash = true;
+            send(ws, { type: 'crash', event: 'sub', crash: crashView(uid) });
+            break;
+          case 'crash_unsub': ws.crash = false; break;
+          case 'crash_bet': crashBet(ws.user, msg); break;
+          case 'crash_cancel': crashCancel(ws.user); break;
+          case 'crash_cashout': crashCashout(ws.user); break;
           default: throw new Error('BAD_ACTION');
         }
         if (rid != null) send(ws, { type: 'ok', rid });

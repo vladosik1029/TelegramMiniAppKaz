@@ -16,6 +16,7 @@ import {
   createRoom, joinRoom, leaveRoom, placeBet, clearBets, setReady, playAction,
   getRoom, listRooms, roomPreview, roomState,
 } from './rooms.js';
+import { CRASH_ERRORS } from './crash.js';
 
 export const api = Router();
 
@@ -193,6 +194,7 @@ const ERRORS = {
   NO_SESSION: 'Активная игра не найдена — начните новую',
   BALANCE_TOO_LOW: 'Баланс не может уйти в минус',
   ...ROOM_ERRORS,
+  ...CRASH_ERRORS,
 };
 
 /** Текст ошибки для пользователя или null, если это неожиданное исключение */
