@@ -7,6 +7,8 @@ WORKDIR /app/client
 COPY client/package.json client/package-lock.json ./
 RUN npm ci
 COPY client/ ./
+# экран «Проверка честности» импортирует код генерации исходов с сервера (алиас @fair)
+COPY server/src/fair/ /app/server/src/fair/
 RUN npm run build
 
 # ---------- Стадия 2: рантайм ----------

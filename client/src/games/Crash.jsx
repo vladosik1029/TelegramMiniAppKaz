@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { haptic, wsConnect, wsSend, onWsMsg, wsIsOpen } from '../api.js';
+import { FairLine } from '../components/Fairness.jsx';
 import { BetStepper } from '../components/ui.jsx';
 
 const fmt = (n) => Number(n).toLocaleString('ru-RU');
@@ -157,6 +158,11 @@ export default function Crash({ profile, refresh }) {
           })}
         </AnimatePresence>
         {c && !c.bets.length && <div className="hint">В этом раунде пока никто не поставил</div>}
+        {c?.fair && (
+          <FairLine hash={c.fair.hash}
+            last={c.fair.last && { ...c.fair.last, game: 'crash', nonce: c.fair.last.idx,
+              params: { idx: c.fair.last.idx, commitment: c.fair.last.commitment }, record: { point: c.fair.last.point } }} />
+        )}
       </div>
     </main>
   );

@@ -7,17 +7,19 @@
 // При дабле ставка удваивается (betUnits = 2), множитель умножается на 2.
 
 import { freshDeck, draw, handTotal, HIDDEN } from '../cards.js';
+import { cardStr } from '../fair/games.js';
 
 const isBJ = (cards) => cards.length === 2 && handTotal(cards).total === 21;
 
-export function start() {
-  const deck = freshDeck();
+export function start(bet, opts, rng) {
+  const deck = freshDeck(rng);
+  const fair = { record: { deck: deck.map(cardStr) } };
   const player = [draw(deck), draw(deck)];
   const dealer = [draw(deck), draw(deck)];
   const state = { deck, player, dealer, stage: 'player', betUnits: 1 };
   // Если у игрока сразу BlackJack — клиент отправляет stand (dealerPlay)
   if (isBJ(player)) state.stage = 'done';
-  return { state, view: view(state), finished: false };
+  return { state, view: view(state), finished: false, fair };
 }
 
 export function act(state, action) {

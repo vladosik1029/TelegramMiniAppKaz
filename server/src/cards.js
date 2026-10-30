@@ -1,25 +1,16 @@
 // Общие вспомогательные функции для карточных игр
 
-export const SUITS = ['♠', '♥', '♦', '♣'];
-export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+import { SUITS, RANKS, deck52 } from './fair/games.js';
+import { randomRng } from './fair/node.js';
 
-/** Свежая перемешанная колода из 52 карт. Карта: { s: '♠', r: 'A' } */
-export function freshDeck() {
-  const deck = [];
-  for (const s of SUITS) for (const r of RANKS) deck.push({ s, r });
-  return shuffle(deck);
-}
+export { SUITS, RANKS };
 
-export function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+/**
+ * Свежая перемешанная колода из 52 карт. Карта: { s: '♠', r: 'A' }.
+ * rng — лента Provably Fair раунда (fair/), карты снимаются с конца.
+ */
+export const freshDeck = (rng = randomRng()) => deck52(rng);
 
-export const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 export const draw = (deck) => deck.pop();
 
 /**

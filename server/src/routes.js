@@ -18,7 +18,10 @@ import {
   createRoom, joinRoom, leaveRoom, placeBet, clearBets, setReady, playAction,
   getRoom, listRooms, roomPreview, roomState,
 } from './rooms.js';
-import { CRASH_ERRORS } from './crash.js';
+import { CRASH_ERRORS, crashFair } from './crash.js';
+import {
+  FAIR_ERRORS, takeNonce, openRound, closeRound, fairState, setClientSeed, rotateSeed, fairHistory, publicRounds,
+} from './fair/index.js';
 import { admin } from './admin.js';
 
 export const api = Router();
@@ -128,13 +131,20 @@ api.post('/games/:game/start', (req, res) => {
       changeBalance(req.user.id, -bet);
       db.prepare('DELETE FROM sessions WHERE user_id = ? AND game = ?').run(req.user.id, game);
 
-      const started = mod.start(bet, req.body?.opts ?? null);
+      // Provably Fair: исход считается из сидов игрока и следующего nonce
+      const round = takeNonce(req.user.id);
+      const started = mod.start(bet, req.body?.opts ?? null, round.rng, round);
+      const fairId = openRound({
+        userId: req.user.id, game, hash: round.hash, clientSeed: round.clientSeed, nonce: round.nonce,
+        params: started.fair?.params, record: started.fair?.record,
+      });
+      const fair = { roundId: fairId, serverSeedHash: round.hash, clientSeed: round.clientSeed, nonce: round.nonce };
       if (started.finished) {
-        return settle(req.user.id, game, bet, started);
+        return { ...settle(req.user.id, game, bet, started, fairId), fair };
       }
       db.prepare('INSERT INTO sessions (user_id, game, state, bet) VALUES (?, ?, ?, ?)')
-        .run(req.user.id, game, JSON.stringify({ ...started.state, _bet: bet }), bet);
-      return { finished: false, view: started.view };
+        .run(req.user.id, game, JSON.stringify({ ...started.state, _bet: bet, _fair: fairId }), bet);
+      return { finished: false, view: started.view, fair };
     });
     res.json(formatResponse(req.user, game, bet, result));
   } catch (e) { handleError(e, res); }
@@ -164,10 +174,10 @@ api.post('/games/:game/action', (req, res) => {
 
       if (acted.finished) {
         db.prepare('DELETE FROM sessions WHERE user_id = ? AND game = ?').run(req.user.id, game);
-        return settle(req.user.id, game, sess.bet, acted);
+        return settle(req.user.id, game, sess.bet, acted, state._fair);
       }
       db.prepare('UPDATE sessions SET state = ? WHERE user_id = ? AND game = ?')
-        .run(JSON.stringify({ ...acted.state, _bet: sess.bet }), req.user.id, game);
+        .run(JSON.stringify({ ...acted.state, _bet: sess.bet, _fair: state._fair }), req.user.id, game);
       return { finished: false, view: acted.view };
     });
     res.json(formatResponse(req.user, game, null, result));
@@ -175,7 +185,7 @@ api.post('/games/:game/action', (req, res) => {
 });
 
 /** Начисление выплаты и запись истории при завершении раунда */
-function settle(userId, game, bet, result) {
+function settle(userId, game, bet, result, fairId) {
   // returnMult уже умножен на betUnits (дабл в блэкджеке) — выплата считается от исходной ставки
   const betUnits = result.state?.betUnits ?? 1;
   const returnMult = result.returnMult ?? 0;
@@ -183,6 +193,12 @@ function settle(userId, game, bet, result) {
   const payout = Math.round(bet * returnMult);
   changeBalance(userId, payout);
   addHistory(userId, game, stakedTotal, payout - stakedTotal);
+  if (fairId) {
+    closeRound(fairId, {
+      params: result.fair?.params, record: result.fair?.record,
+      summary: `${result.message ?? result.outcome} · ${payout - stakedTotal >= 0 ? '+' : ''}${payout - stakedTotal}`,
+    });
+  }
   return { finished: true, outcome: result.outcome, net: payout - stakedTotal, view: result.view, message: result.message ?? null };
 }
 
@@ -199,6 +215,7 @@ const ERRORS = {
   BALANCE_TOO_LOW: 'Баланс не может уйти в минус',
   ...ROOM_ERRORS,
   ...CRASH_ERRORS,
+  ...FAIR_ERRORS,
 };
 
 /** Текст ошибки для пользователя или null, если это неожиданное исключение */
@@ -210,6 +227,28 @@ function handleError(e, res) {
   console.error(e);
   res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 }
+
+// ─── Provably Fair: сиды игрока, смена сида, история для проверки ───────────
+
+api.get('/fair', (req, res) => {
+  res.json({ ...fairState(req.user.id), crash: crashFair() });
+});
+
+api.post('/fair/client-seed', (req, res) => {
+  try { res.json(setClientSeed(req.user.id, req.body?.clientSeed)); } catch (e) { handleError(e, res); }
+});
+
+api.post('/fair/rotate', (req, res) => {
+  try { res.json(rotateSeed(req.user.id, req.body?.clientSeed)); } catch (e) { handleError(e, res); }
+});
+
+api.get('/fair/history', (req, res) => {
+  res.json({ rounds: fairHistory(req.user.id, req.query.limit) });
+});
+
+api.get('/fair/crash', (req, res) => {
+  res.json({ ...crashFair(), rounds: publicRounds('crash', req.query.limit) });
+});
 
 // ─── столы (мультиплеер) ─────────────────────────────────────────────────────
 // Создание/вход/выход — REST; ставки и спин — по WebSocket (ws.js),

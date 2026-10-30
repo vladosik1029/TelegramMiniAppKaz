@@ -9,9 +9,11 @@
 // Крупье добирает, пока у него меньше 17.
 
 import { freshDeck, draw, handTotal } from '../cards.js';
+import { cardStr } from '../fair/games.js';
 
-export function start() {
-  const deck = freshDeck();
+export function start(bet, opts, rng) {
+  const deck = freshDeck(rng);
+  const fair = { record: { deck: deck.map(cardStr) } };
   const player = [draw(deck), draw(deck)];
   const dealer = [draw(deck), draw(deck)];
   const state = { deck, player, dealer };
@@ -22,16 +24,17 @@ export function start() {
   const d21 = handTotal(dealer).total === 21 && d21ok(dealer) && dealer.length === 2;
 
   if (pPan || dPan || p21 || d21) {
-    if (pPan && dPan) return finish(state, 'push', 1);
-    if (pPan) return finish(state, 'pan_pan', 3);
-    if (dPan) return finish(state, 'dealer_pan', 0);
-    if (p21 && d21) return finish(state, 'push', 1);
-    if (p21) return finish(state, 'ochko', 2);
-    return finish(state, 'lose', 0);
+    const done = (outcome, mult) => ({ ...finish(state, outcome, mult), fair });
+    if (pPan && dPan) return done('push', 1);
+    if (pPan) return done('pan_pan', 3);
+    if (dPan) return done('dealer_pan', 0);
+    if (p21 && d21) return done('push', 1);
+    if (p21) return done('ochko', 2);
+    return done('lose', 0);
   }
 
   state.stage = 'player';
-  return { state, view: view(state), finished: false };
+  return { state, view: view(state), finished: false, fair };
 }
 
 /** 21 с двух карт считается «очком», только если есть туз (иначе недостижимо, но проверим честно) */

@@ -9,6 +9,7 @@ import { api, tg, haptic, wsConnect, wsSend, onWsMsg, wsIsOpen } from '../api.js
 import Wheel, { ROULETTE_BETS, COLOR_NAME, NumberStrip, colorOf } from './Wheel.jsx';
 import { AnimatedNumber } from './fx.jsx';
 import CardTable from './CardTable.jsx';
+import { FairLine } from './Fairness.jsx';
 
 const GAME_ICON = { roulette: '🎡', blackjack: '🂡', ochko: '♠️', poker: '🂱', durak: '🃏' };
 const GAME_TITLE = { roulette: 'рулетка', blackjack: 'блэкджек', ochko: 'очко', poker: 'покер', durak: 'дурак' };
@@ -412,6 +413,7 @@ function RoomScreen({ roomId, profile, onExit }) {
         <small>{GAME_ICON[room.game]} бай-ин {fmt(room.buyIn)} · <span className={`dot ${connected ? 'on' : ''}`} /> {connected ? 'онлайн' : 'переподключение…'}</small>
       </div>
       <button className="btn small" onClick={share}>🔗 Пригласить</button>
+      {room.fair && <FairLine hash={room.fair.current} last={room.fair.last} />}
     </div>
   );
 

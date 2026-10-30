@@ -62,6 +62,22 @@ docker compose up -d                  # старт
 docker exec -it casino sh             # внутрь контейнера (npm run setup:bot и т.п.)
 ```
 
+## Provably Fair (с обновления «проверка честности»)
+
+- Миграция не нужна: при старте сервер сам создаёт таблицы `fair_users`, `fair_seeds`,
+  `fair_rounds`, `crash_chains` (`CREATE TABLE IF NOT EXISTS`), старые таблицы не меняются.
+- Клиент при сборке берёт код из `server/src/fair/` — это учтено в `Dockerfile`.
+- После обновления: открыть приложение → 🛡 → видно хэши сидов; сыграть пару игр →
+  «Сменить server seed» → в истории у игр «✓ честно».
+- Перепроверить все раскрытые раунды на боевой базе (тестов в образе нет, поэтому через
+  одноразовый контейнер с репозиторием; база открывается только на чтение):
+  ```bash
+  cd /opt/TelegramMiniAppKaz
+  docker run --rm -v "$PWD:/repo" -w /repo/server node:24-bookworm-slim \
+    node test/fair-db.js ../casino-data/casino.db
+  ```
+- Сиды — секрет до раскрытия: `casino-data/casino.db` по-прежнему нельзя никому отдавать.
+
 ## База данных
 
 - Путь на хосте: `/opt/TelegramMiniAppKaz/casino-data/casino.db` (монтируется как volume).

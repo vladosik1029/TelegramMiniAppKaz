@@ -17,6 +17,7 @@ import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import Rules, { RulesCard } from './components/Rules.jsx';
 import Tables from './components/Tables.jsx';
+import Fairness, { ensureBrowserSeed } from './components/Fairness.jsx';
 
 const GAMES = [
   { id: 'blackjack', title: 'Blackjack', subtitle: '21 очко против дилера', icon: '🂡', group: 'cards', accent: 'emerald' },
@@ -55,12 +56,25 @@ export default function App() {
   const [tab, setTab] = useState(inviteRoomId ? 'tables' : 'games'); // games | tables | wallet | rules | admin
   const [screenGame, setScreenGame] = useState(null);
   const [showRules, setShowRules] = useState(false);
+  const [showFair, setShowFair] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
     try { tg?.ready?.(); tg?.expand?.(); } catch {}
     api('/init').then(setProfile).catch(e => setErr(e.message));
+    ensureBrowserSeed(); // Provably Fair: client seed придумывает браузер, а не сервер
   }, []);
+
+  const fairBtn = (
+    <button className="icon-btn" aria-label="Проверка честности" onClick={() => { haptic('light'); setShowFair(true); }}>
+      🛡<span className="rules-btn-label">Честность</span>
+    </button>
+  );
+  const fairSheet = (
+    <Sheet open={showFair} onClose={() => setShowFair(false)}>
+      <Fairness />
+    </Sheet>
+  );
 
   const refresh = async () => setProfile(await api('/init'));
 
@@ -86,12 +100,14 @@ export default function App() {
           <button className="icon-btn rules-btn" aria-label="Правила" onClick={() => { haptic('light'); setShowRules(true); }}>
             📖<span className="rules-btn-label">Правила</span>
           </button>
+          {fairBtn}
           <Coin balance={profile.balance} />
         </div>
         {SCREENS[screenGame] && React.createElement(SCREENS[screenGame], gameProps)}
         <Sheet open={showRules} onClose={() => setShowRules(false)}>
           <RulesCard id={screenGame} />
         </Sheet>
+        {fairSheet}
       </motion.div>
     );
   }
@@ -105,8 +121,12 @@ export default function App() {
           <div className="hello">{profile.dev && <span className="dev-badge">DEV</span>}{profile.firstName}</div>
           {profile.isAdmin && <div className="admin-badge">👑 Админ</div>}
         </div>
-        <Coin balance={balance} />
+        <div className="topbar-right">
+          {fairBtn}
+          <Coin balance={balance} />
+        </div>
       </header>
+      {fairSheet}
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div

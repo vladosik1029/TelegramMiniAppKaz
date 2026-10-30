@@ -2,18 +2,28 @@
 // Открыта карта; игрок угадывает, будет ли следующая «выше или равна» или
 // «ниже или равна». Каждое попадание умножает банк раунда на 0.97 / шанс.
 // Забрать выигрыш можно после первого угаданного шага. Ошибся — ставка сгорает.
-// Колода бесконечная (каждая карта — независимый crypto-рандом), поэтому шансы
-// всегда считаются только по рангу текущей карты.
+// Колода бесконечная (каждая карта — независимое число 0…51 из ленты Provably
+// Fair), поэтому шансы всегда считаются только по рангу текущей карты.
+// Карты открываются по одной, но все они — продолжение одной ленты раунда:
+// k-я карта = k-е число ленты HMAC(server_seed, client_seed:nonce), в сессии
+// лежат сиды раунда (сессия на сервере, клиенту не отдаётся).
 
-import crypto from 'node:crypto';
-import { SUITS } from '../cards.js';
+import { HILO_RANKS, hiloCard, cardStr } from '../fair/games.js';
+import { rngFor, randomHex } from '../fair/node.js';
 
 // Порядок по старшинству: 2 младшая, туз старший
-export const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+export const RANKS = HILO_RANKS;
 const EDGE = 0.97;
 const MAX_MULT = 5000;
 
-const drawCard = () => ({ r: RANKS[crypto.randomInt(0, 13)], s: SUITS[crypto.randomInt(0, 4)] });
+/** Следующая карта ленты раунда: перематываем ленту на уже открытые карты */
+function drawCard(state) {
+  const { serverSeed, clientSeed, nonce } = state.seeds;
+  const rng = rngFor(serverSeed, clientSeed, nonce);
+  let card;
+  for (let k = 0; k <= state.cards.length; k++) card = hiloCard(rng);
+  return card;
+}
 const rankIdx = (c) => RANKS.indexOf(c.r); // 0..12
 
 /** Шанс (0..1) того, что следующая карта будет ≥ (hi) или ≤ (lo) текущей */
@@ -23,8 +33,12 @@ export function chance(card, dir) {
 }
 export const stepMult = (card, dir) => EDGE / chance(card, dir);
 
-export function start() {
-  const state = { cards: [drawCard()], mult: 1 };
+export function start(bet, opts, rng, round) {
+  const seeds = round
+    ? { serverSeed: round.serverSeed, clientSeed: round.clientSeed, nonce: round.nonce }
+    : { serverSeed: randomHex(), clientSeed: 'local', nonce: 0 };
+  const state = { seeds, cards: [], mult: 1 };
+  state.cards.push(drawCard(state));
   return { finished: false, state, view: view(state) };
 }
 
@@ -39,13 +53,13 @@ export function act(state, action) {
     // пропуск карты без изменения банка — не больше 3 раз за раунд
     if ((state.skips ?? 0) >= 3) throw new Error('BAD_ACTION');
     state.skips = (state.skips ?? 0) + 1;
-    state.cards.push(drawCard());
+    state.cards.push(drawCard(state));
     state.skipped = [...(state.skipped ?? []), state.cards.length - 1];
     return { finished: false, state, view: view(state) };
   }
   if (action !== 'hi' && action !== 'lo') throw new Error('BAD_ACTION');
 
-  const next = drawCard();
+  const next = drawCard(state);
   state.cards.push(next);
   const ok = action === 'hi' ? rankIdx(next) >= rankIdx(cur) : rankIdx(next) <= rankIdx(cur);
   if (!ok) return finish(state, 'miss', 0);
@@ -62,6 +76,7 @@ function finish(state, how, mult) {
     state,
     view: view(state),
     message: how,
+    fair: { params: { cards: state.cards.length }, record: { cards: state.cards.map(cardStr) } },
   };
 }
 

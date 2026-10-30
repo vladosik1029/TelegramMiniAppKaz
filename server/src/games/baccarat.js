@@ -3,9 +3,9 @@
 // Ставка на Игрока (×2), Банкира (×1.95 — 5% комиссия) или Ничью (×9).
 // При ничьей ставки на Игрока и Банкира возвращаются.
 
-import { SUITS, RANKS, shuffle } from '../cards.js';
+import { baccaratShoe, cardStr } from '../fair/games.js';
+import { randomRng } from '../fair/node.js';
 
-const DECKS = 6;
 export const PAYS = { player: 2, banker: 1.95, tie: 9 };
 const NAMES = { player: 'Игрок', banker: 'Банкир', tie: 'Ничья' };
 
@@ -39,13 +39,13 @@ export function deal(deck) {
   return { player, banker, order, pt, bt, winner: pt > bt ? 'player' : bt > pt ? 'banker' : 'tie' };
 }
 
-export function start(bet, opts) {
+export function start(bet, opts, rng = randomRng()) {
   const side = opts?.side;
   if (!Object.hasOwn(PAYS, side)) throw new Error('BAD_ACTION');
 
-  const shoe = [];
-  for (let k = 0; k < DECKS; k++) for (const s of SUITS) for (const r of RANKS) shoe.push({ s, r });
-  const d = deal(shuffle(shoe));
+  const shoe = baccaratShoe(rng);
+  const fair = { record: { deck: shoe.map(cardStr) } };
+  const d = deal([...shoe]);
 
   let returnMult, outcome;
   if (d.winner === side) { returnMult = PAYS[side]; outcome = 'win'; }
@@ -59,5 +59,6 @@ export function start(bet, opts) {
     state: {},
     view: { ...d, side },
     message: `${NAMES[d.winner]}: ${d.pt} — ${d.bt}`,
+    fair,
   };
 }

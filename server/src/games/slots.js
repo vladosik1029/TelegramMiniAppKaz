@@ -1,17 +1,14 @@
 // ─── Слоты (3 барабана, 1 линия) ────────────────────────────────────────────
 // Каждый барабан — одна и та же лента символов; сервер выбирает позицию
-// каждого барабана (crypto.randomInt), линия выплаты — средний ряд.
+// каждого барабана (лента Provably Fair, fair/), линия выплаты — средний ряд.
 // Выплаты (returnMult): три одинаковых — по таблице PAYS, две вишни — ×2,
 // одна вишня — ×1 (возврат). RTP ≈ 97.8% (проверяется в smoke.js).
 
-import crypto from 'node:crypto';
+import { DERIVE, SLOT_STRIP } from '../fair/games.js';
+import { randomRng } from '../fair/node.js';
 
-// Лента барабана: частые символы встречаются чаще
-export const STRIP = [
-  '🍒', '🍋', '🍊', '🍒', '🍇', '🍋', '🔔', '🍊',
-  '🍒', '🍋', '⭐', '🍊', '🍇', '🍒', '🍋', '💎',
-  '🍊', '🍒', '🍇', '🔔', '🍋', '🍊', '7️⃣', '🍇',
-];
+// Лента барабана (fair/games.js): частые символы встречаются чаще
+export const STRIP = SLOT_STRIP;
 
 export const PAYS = {
   '7️⃣': 200, '💎': 100, '⭐': 50, '🔔': 25, '🍇': 15, '🍊': 10, '🍋': 8, '🍒': 12,
@@ -26,8 +23,9 @@ export function evaluate(line) {
   return { mult: 0, combo: 'none' };
 }
 
-export function start() {
-  const stops = [0, 1, 2].map(() => crypto.randomInt(0, STRIP.length));
+export function start(bet, opts, rng = randomRng()) {
+  const record = DERIVE.slots(rng);
+  const stops = record.stops;
   const line = stops.map(i => STRIP[i]);
   const { mult, combo } = evaluate(line);
   return {
@@ -37,5 +35,6 @@ export function start() {
     state: {},
     view: { stops, line, combo, mult, strip: STRIP },
     message: combo,
+    fair: { record },
   };
 }

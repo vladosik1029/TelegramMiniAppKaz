@@ -1,9 +1,10 @@
 // ─── Кости (Dice) ────────────────────────────────────────────────────────────
-// Мгновенная игра: сервер бросает число 0.00–99.99 (crypto.randomInt).
+// Мгновенная игра: сервер бросает число 0.00–99.99 (лента Provably Fair, fair/).
 // Игрок выбирает порог и направление: «меньше X» или «больше X».
 // Шанс = доля чисел, которые выигрывают; выплата = 0.99 / шанс (1% — дом).
 
-import crypto from 'node:crypto';
+import { DERIVE } from '../fair/games.js';
+import { randomRng } from '../fair/node.js';
 
 export const EDGE = 0.99;
 const MIN_T = 2, MAX_T = 98;
@@ -15,12 +16,13 @@ export function chanceOf(dir, target) {
 
 export const multOf = (dir, target) => Math.floor((EDGE / chanceOf(dir, target)) * 10000) / 10000;
 
-export function start(bet, opts) {
+export function start(bet, opts, rng = randomRng()) {
   const dir = opts?.dir === 'over' ? 'over' : opts?.dir === 'under' ? 'under' : null;
   const target = Math.floor(Number(opts?.target));
   if (!dir || !Number.isInteger(target) || target < MIN_T || target > MAX_T) throw new Error('BAD_ACTION');
 
-  const roll = crypto.randomInt(0, 10000); // 0..9999 → 0.00..99.99
+  const record = DERIVE.dice(rng);
+  const roll = record.roll; // 0..9999 → 0.00..99.99
   const win = dir === 'under' ? roll < target * 100 : roll >= target * 100;
   const mult = multOf(dir, target);
 
@@ -31,5 +33,6 @@ export function start(bet, opts) {
     state: {},
     view: { roll: roll / 100, dir, target, mult, chance: chanceOf(dir, target) },
     message: `${dir === 'under' ? 'Меньше' : 'Больше'} ${target} → ${(roll / 100).toFixed(2)}`,
+    fair: { record },
   };
 }

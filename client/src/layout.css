@@ -141,3 +141,46 @@
   .tables, .wallet, .admin { max-width: 760px; margin: 0 auto; width: 100%; }
   .tables:has(.room-screen) { max-width: none; }
 }
+
+/* ─── Provably Fair: «Проверка честности» ───────────── */
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.fair { padding: 4px 4px 0; }
+.fair-how { margin: 12px 0; background: var(--card); border: 1px solid #2b4a35; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.45; }
+.fair-how summary { cursor: pointer; font-weight: 700; color: var(--gold); }
+.fair-how ol { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.fair-tabs { margin: 10px 0; }
+.fair-card { background: var(--card); border: 1px solid #2b4a35; border-radius: 14px; padding: 12px; margin: 10px 0; }
+.fair-revealed { border-color: var(--gold2); }
+.fair-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 4px; }
+.fair-field .fair-label { margin-top: 8px; }
+.fair-code {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text);
+  background: var(--bg2); border: 1px solid #2b4a35; border-radius: 8px; padding: 7px 9px;
+  overflow-wrap: anywhere; word-break: break-all;
+}
+.fair-seed-row { display: flex; gap: 8px; align-items: center; }
+.fair-seed-row .input { margin: 0; font-family: ui-monospace, Menlo, monospace; }
+.fair-meta { font-size: 13px; color: var(--muted); margin-top: 10px; }
+.fair-ok { color: #8fe0b0; }
+.fair-round { margin-bottom: 6px; }
+.fair-round-head { width: 100%; cursor: pointer; color: inherit; font: inherit; text-align: left; }
+.fair-round.open .fair-round-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.fair-round-body { background: var(--bg2); border: 1px solid #2b4a35; border-top: none; border-radius: 0 0 12px 12px; padding: 4px 12px 12px; }
+.fair-badge { font-size: 12px; font-weight: 800; text-align: right; color: var(--muted); }
+.fair-badge.pos { color: #8fe0b0; }
+.fair-badge.neg { color: #f0a7ab; }
+.fair-badge.gold { color: var(--gold); }
+.fair-checks { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.fair-check { font-size: 13px; font-weight: 700; }
+.fair-check.pos { color: #8fe0b0; }
+.fair-check.neg { color: #f0a7ab; }
+.fair-outcome { margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--gold); overflow-wrap: anywhere; }
+.fair-line {
+  flex-basis: 100%; margin-top: 6px; cursor: pointer; text-align: left;
+  background: none; border: 1px dashed #2b4a35; border-radius: 10px; padding: 6px 10px;
+  color: var(--muted); font-size: 12px;
+}
+.fair-line code { font-family: ui-monospace, Menlo, monospace; color: var(--text); }
+.room-head { flex-wrap: wrap; }
+.fair-seed-row .btn { flex: none; min-width: 48px; }
