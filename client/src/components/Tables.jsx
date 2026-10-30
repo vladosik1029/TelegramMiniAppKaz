@@ -8,8 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api, tg, haptic, wsConnect, wsSend, onWsMsg, wsIsOpen } from '../api.js';
 import Wheel, { ROULETTE_BETS, COLOR_NAME, NumberStrip, colorOf } from './Wheel.jsx';
 import { AnimatedNumber } from './fx.jsx';
+import CardTable from './CardTable.jsx';
 
 const GAME_ICON = { roulette: '🎡', blackjack: '🂡', ochko: '♠️', poker: '🂱' };
+const GAME_TITLE = { roulette: 'рулетка', blackjack: 'блэкджек', ochko: 'очко', poker: 'покер' };
 const fmt = (n) => Number(n).toLocaleString('ru-RU');
 
 export default function Tables({ profile, refresh, inviteRoomId, onInviteHandled }) {
@@ -382,15 +384,17 @@ function RoomScreen({ roomId, profile, onExit }) {
 
   const share = () => {
     const link = room.invite.link;
-    const text = `Залетай за мой стол «${room.name}» — рулетка, бай-ин ${fmt(room.buyIn)} 🪙`;
+    const text = `Залетай за мой стол «${room.name}» — ${GAME_TITLE[room.game] ?? 'игра'}, бай-ин ${fmt(room.buyIn)} 🪙`;
     const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
     haptic('light');
     if (tg?.openTelegramLink) tg.openTelegramLink(url);
     else navigator.clipboard?.writeText(link).then(() => setErr('Ссылка скопирована: ' + link)).catch(() => setErr(link));
   };
 
+  // карточный стол: ставка до раздачи вернётся, посреди раздачи рука доигрывается без тебя
+  const myCardStake = room.round?.phase === 'betting' ? (room.players.find(p => p.id === profile.id)?.bet ?? 0) : 0;
   const leave = () => {
-    const back = you.roomBalance + myStake;
+    const back = you.roomBalance + (room.round ? myCardStake : myStake);
     const ask = `Выйти из-за стола? На баланс вернётся ${fmt(back)} 🪙`;
     const go = () => {
       if (wsIsOpen()) wsSend({ op: 'leave' });
@@ -400,16 +404,27 @@ function RoomScreen({ roomId, profile, onExit }) {
     else if (window.confirm(ask)) go();
   };
 
+  const head = (
+    <div className="room-head">
+      <button className="btn-ghost" onClick={() => onExit()}>← Столы</button>
+      <div className="room-head-title">
+        <div>{room.isPublic ? '🌐' : '🔒'} {room.name}</div>
+        <small>{GAME_ICON[room.game]} бай-ин {fmt(room.buyIn)} · <span className={`dot ${connected ? 'on' : ''}`} /> {connected ? 'онлайн' : 'переподключение…'}</small>
+      </div>
+      <button className="btn small" onClick={share}>🔗 Пригласить</button>
+    </div>
+  );
+
+  if (room.round) {
+    return (
+      <CardTable room={room} profile={profile} connected={connected} head={head} err={err} setErr={setErr}
+        leaveLabel={`🚪 Выйти и забрать ${fmt(you.roomBalance + myCardStake)} 🪙`} onLeave={leave} />
+    );
+  }
+
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="room-head">
-        <button className="btn-ghost" onClick={() => onExit()}>← Столы</button>
-        <div className="room-head-title">
-          <div>{room.isPublic ? '🌐' : '🔒'} {room.name}</div>
-          <small>бай-ин {fmt(room.buyIn)} · <span className={`dot ${connected ? 'on' : ''}`} /> {connected ? 'онлайн' : 'переподключение…'}</small>
-        </div>
-        <button className="btn small" onClick={share}>🔗 Пригласить</button>
-      </div>
+      {head}
 
       <div className="table-felt rw-felt">
         <div className="rw-wrap">
