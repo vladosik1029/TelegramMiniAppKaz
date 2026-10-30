@@ -57,13 +57,6 @@
 }
 .game-grid > :nth-child(2n) .game-shine { animation-delay: 1.5s; }
 @keyframes cardShine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
-.new-badge {
-  position: absolute; top: 10px; right: 10px;
-  font-size: 9px; font-weight: 900; letter-spacing: .08em;
-  background: linear-gradient(160deg, #f6dd94, #b48b3c); color: #1b1407;
-  padding: 2px 7px; border-radius: 999px;
-  box-shadow: 0 0 10px rgba(230, 192, 101, .5);
-}
 
 /* правила: 8 игр — пилюли скроллятся по горизонтали */
 .rules-controls { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }

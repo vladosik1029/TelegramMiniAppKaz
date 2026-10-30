@@ -19,11 +19,11 @@ const GAMES = [
   { id: 'blackjack', title: 'Blackjack', subtitle: '21 очко против дилера', icon: '🂡', group: 'cards', accent: 'emerald' },
   { id: 'ochko', title: 'Очко', subtitle: 'Русская «21» с пан-пан', icon: '♠️', group: 'cards', accent: 'ruby' },
   { id: 'poker', title: 'Покер', subtitle: 'Пятикарточный дро-покер', icon: '🂱', group: 'cards', accent: 'sapphire' },
-  { id: 'hilo', title: 'Выше / Ниже', subtitle: 'Угадай следующую карту', icon: '🃏', group: 'cards', accent: 'amber', isNew: true },
+  { id: 'hilo', title: 'Выше / Ниже', subtitle: 'Угадай следующую карту', icon: '🃏', group: 'cards', accent: 'amber' },
   { id: 'roulette', title: 'Рулетка', subtitle: 'Европейская, 37 лунок', icon: '🎡', group: 'quick', accent: 'ruby' },
-  { id: 'slots', title: 'Слоты', subtitle: '3 барабана, до ×200', icon: '🎰', group: 'quick', accent: 'violet', isNew: true },
-  { id: 'mines', title: 'Сапёр', subtitle: 'Открывай алмазы, беги от мин', icon: '💎', group: 'quick', accent: 'sapphire', isNew: true },
-  { id: 'dice', title: 'Кости', subtitle: 'Сам выбираешь шанс', icon: '🎲', group: 'quick', accent: 'emerald', isNew: true },
+  { id: 'slots', title: 'Слоты', subtitle: '3 барабана, до ×200', icon: '🎰', group: 'quick', accent: 'violet' },
+  { id: 'mines', title: 'Сапёр', subtitle: 'Открывай алмазы, беги от мин', icon: '💎', group: 'quick', accent: 'sapphire' },
+  { id: 'dice', title: 'Кости', subtitle: 'Сам выбираешь шанс', icon: '🎲', group: 'quick', accent: 'emerald' },
 ];
 
 const TABS = [
@@ -112,7 +112,6 @@ export default function App() {
                         className={`game-card accent-${g.accent}`}
                         onClick={() => { haptic('light'); setScreenGame(g.id); }}
                       >
-                        {g.isNew && <span className="new-badge">NEW</span>}
                         <div className="game-icon">{g.icon}</div>
                         <div className="game-title">{g.title}</div>
                         <div className="game-sub">{g.subtitle}</div>
