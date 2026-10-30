@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import express from 'express';
 import { env } from './telegram.js';
 import { api } from './routes.js';
+import { bootRooms } from './rooms.js';
+import { attachWs } from './ws.js';
 
 const app = express();
 app.use(express.json());
@@ -24,10 +26,12 @@ app.use('/api', api);
 const clientDist = path.join(process.cwd(), '..', 'client', 'dist');
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
-  app.get(/^(?!\/api).*/, (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+  app.get(/^(?!\/api|\/ws).*/, (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 }
 
-app.listen(env.PORT, () => {
+bootRooms();
+
+const server = app.listen(env.PORT, () => {
   console.log(`Casino API: http://localhost:${env.PORT}`);
   if (env.DEV_MODE) {
     console.log(`DEV_MODE включён: браузер работает как тестовый игрок (id=${env.DEV_USER_ID})`);
@@ -40,3 +44,6 @@ app.listen(env.PORT, () => {
   if (!env.ADMIN_IDS.size) console.warn('⚠ ADMIN_IDS пуст — админ-панель недоступна никому');
   if (!env.BOT_TOKEN && !env.DEV_MODE) console.warn('⚠ BOT_TOKEN не задан — авторизация Telegram не будет работать');
 });
+
+// WebSocket столов на том же порту: /ws (Caddy проксирует upgrade сам)
+attachWs(server);

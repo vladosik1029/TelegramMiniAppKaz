@@ -1,43 +1,13 @@
-// Рулетка (европейская, 37 лунок). Сервер сразу крутит спин, клиент --
-// анимирует вращение колеса до выпавшей лунки и показывает баннер.
+// Рулетка (европейская, 37 лунок). Сервер сразу крутит спин, клиент
+// анимирует колесо до выпавшей лунки (хаб показывает лунку под маркером вживую).
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
+import Wheel, { ROULETTE_BETS as BETS, COLOR_NAME, NumberStrip } from '../components/Wheel.jsx';
 
-const STEP = 360 / 37;
-const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
-
-// порядок лунокEuropean wheel — для раскраски конического градиента
-const ORDER = [
-  0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5,
-  24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26,
-];
-const colorOf = (n) => (n === 0 ? 'green' : RED.has(n) ? 'red' : 'black');
-
-const WHEEL_BG = `conic-gradient(${ORDER.map((n, i) => {
-  const c = colorOf(n) === 'red' ? '#b8352b' : colorOf(n) === 'green' ? '#1f9450' : '#232830';
-  return `${c} ${(i * STEP).toFixed(3)}deg ${((i + 1) * STEP).toFixed(3)}deg`;
-}).join(', ')})`;
-
-const BETS = [
-  { type: 'red', label: 'Красное', mult: '×2', cls: 'red' },
-  { type: 'black', label: 'Чёрное', mult: '×2', cls: 'black' },
-  { type: 'even', label: 'Чётное', mult: '×2' },
-  { type: 'odd', label: 'Нечётное', mult: '×2' },
-  { type: 'low', label: '1–18', mult: '×2' },
-  { type: 'high', label: '19–36', mult: '×2' },
-  { type: 'd1', label: '1–12', mult: '×3' },
-  { type: 'd2', label: '13–24', mult: '×3' },
-  { type: 'd3', label: '25–36', mult: '×3' },
-  { type: 'c1', label: 'Колонка 1', mult: '×3' },
-  { type: 'c2', label: 'Колонка 2', mult: '×3' },
-  { type: 'c3', label: 'Колонка 3', mult: '×3' },
-  { type: 'num', label: 'Число', mult: '×36' },
-];
-
-const COLOR_NAME = { red: '🔴 Красное', black: '⚫ Чёрное', green: '🟢 ЗЕРО' };
+const SPIN_S = 4.2;
 
 export default function Roulette({ profile, refresh }) {
   const [bet, setBet] = useState(50);
@@ -47,18 +17,9 @@ export default function Roulette({ profile, refresh }) {
   const [result, setResult] = useState(null); // ответ сервера (outcome/net/view)
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [rot, setRot] = useState(0);
-  const rotRef = useRef(0);
+  const [spin, setSpin] = useState(null);
 
-  const spinWheelTo = (idx) => {
-    const target = -idx * STEP;                       // куда должна встать лунка (под маркер)
-    const base = ((target - rotRef.current) % 360 + 360) % 360;
-    rotRef.current = rotRef.current + 360 * 5 + base; // 5 оборотов + поправка, всегда вперёд
-    setRot(rotRef.current);
-    return new Promise(r => setTimeout(r, 4400));
-  };
-
-  const spin = async () => {
+  const doSpin = async () => {
     setBusy(true); setErr(''); setResult(null);
     try {
       const r = await api('/games/roulette/start', {
@@ -66,7 +27,7 @@ export default function Roulette({ profile, refresh }) {
         opts: { type: bType, value: bType === 'num' ? num : null },
       });
       setBalance(r.balance);
-      await spinWheelTo(r.view.pocketIdx);
+      await new Promise(done => setSpin({ key: Date.now(), idx: r.view.pocketIdx, duration: SPIN_S, done }));
       setResult(r);
       haptic(r.outcome === 'win' ? 'success' : 'error');
       await refresh();
@@ -84,39 +45,18 @@ export default function Roulette({ profile, refresh }) {
       {/* ─── стол ───────────────────────────────────────── */}
       <div className="table-felt rw-felt">
         <div className="rw-wrap">
-          <div className="wheel-box">
-            <div className="wheel-pointer" />
-            <motion.div
-              className="wheel"
-              animate={{ rotate: rot }}
-              transition={{ duration: 4.2, ease: [.15, .75, .1, 1] }}
-            >
-              <div className="wheel-face" style={{ background: WHEEL_BG }} />
-            </motion.div>
-            <motion.div
-              className="wheel-ball-ring"
-              animate={{ rotate: -rot - 720 }}
-              transition={{ duration: 4.2, ease: [.15, .75, .1, 1] }}
-            >
-              <div className="wheel-ball" />
-            </motion.div>
-            <div className="wheel-hub">
-              {result ? (
-                <>
-                  <span className={`hub-num ${result.view.color}`}>{result.view.number}</span>
-                  <small>{COLOR_NAME[result.view.color]}</small>
-                </>
-              ) : (
-                <small>{busy ? 'ШАР БЕГАЕТ…' : 'ДЕЛАЙ СТАВКУ'}</small>
-              )}
-            </div>
-          </div>
+          <Wheel
+            spin={spin}
+            onDone={() => spin?.done?.()}
+            result={result && { number: result.view.number, color: result.view.color }}
+            idleText={busy ? 'ШАР БЕГАЕТ…' : 'ДЕЛАЙ СТАВКУ'}
+          />
         </div>
 
         {result && (
           <ResultBanner
             result={result}
-            extra={`${result.view.number} — ${COLOR_NAME[result.view.color]} · ${rLabelText(result.view)}`}
+            extra={`${result.view.number} — ${COLOR_NAME[result.view.color]} · ${BETS.find(b => b.type === result.view.betType)?.mult ?? ''}`}
           />
         )}
         {err && <div className="notice">⚠ {err}</div>}
@@ -132,6 +72,12 @@ export default function Roulette({ profile, refresh }) {
               {bet.toLocaleString('ru-RU')} 🪙
             </motion.div>
             <button className="chip" disabled={busy} onClick={() => { haptic('light'); setBet(clamp(bet + 10)); }}>+10</button>
+          </div>
+          <div className="preset-row">
+            {presets.map(p => (
+              <motion.button whileTap={{ scale: .9 }} key={p} className="chip small" disabled={busy}
+                onClick={() => { haptic('light'); setBet(Math.min(p, balance)); }}>{p}</motion.button>
+            ))}
           </div>
 
           <div className="bets-grid">
@@ -150,24 +96,14 @@ export default function Roulette({ profile, refresh }) {
           </div>
 
           {bType === 'num' && (
-            <div className="num-chips">
-              {Array.from({ length: 37 }, (_, n) => (
-                <motion.button
-                  whileTap={{ scale: .88 }}
-                  key={n}
-                  className={`num-chip ${colorOf(n)} ${num === n ? 'sel' : ''}`}
-                  disabled={busy}
-                  onClick={() => { haptic('light'); setNum(n); }}
-                >{n}</motion.button>
-              ))}
-            </div>
+            <NumberStrip value={num} disabled={busy} onPick={(n) => { haptic('light'); setNum(n); }} />
           )}
 
           <motion.button
             whileTap={{ scale: .96 }}
             className="btn primary big"
             disabled={!canSpin}
-            onClick={spin}
+            onClick={doSpin}
           >
             {busy ? 'Колесо крутится…' : bType === 'num' && num == null ? 'Выбери число' : 'Крутить колесо 🎡'}
           </motion.button>
@@ -186,9 +122,4 @@ export default function Roulette({ profile, refresh }) {
       )}
     </main>
   );
-}
-
-function rLabelText(v) {
-  const bet = BETS.find(b => b.type === v.betType);
-  return bet ? `${bet.mult}` : '';
 }

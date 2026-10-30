@@ -14,6 +14,8 @@ export const env = {
   DEV_USER_ID: Number(process.env.DEV_USER_ID || 900001),
   WEBAPP_URL: process.env.WEBAPP_URL || '',
   PORT: Number(process.env.PORT || 3000),
+  // username бота (без @) — для ссылок-приглашений за стол
+  BOT_USERNAME: (process.env.BOT_USERNAME || 'izzi21_bot').replace(/^@/, ''),
 };
 
 /**

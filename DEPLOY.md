@@ -16,6 +16,16 @@ Telegram → https://poker.izzinet.xyz (Caddy + Let's Encrypt)
   DEV_MODE=0, START_BALANCE=1000, PORT — задаёт compose).
 - Кнопка «🎰 Казино» привязана к WebApp один раз (`npm run setup:bot`), при ребутах не пересоздаётся.
 
+## Столы (WebSocket) — что нужно один раз
+
+- Caddy проксирует WebSocket сам, `reverse_proxy casino:3100` менять не нужно (путь `/ws`).
+- Ссылки-приглашения вида `t.me/izzi21_bot?startapp=room_<id>` открывают MiniApp, только если у бота
+  включено **Main Mini App**: @BotFather → `/mybots` → бот → Bot Settings → Configure Mini App →
+  Enable Mini App → URL `https://poker.izzinet.xyz`.
+- Если username бота другой — `BOT_USERNAME=<username>` в `server/.env`.
+- Проверка ws после деплоя (ожидаем `HTTP/1.1 401` — сокет жив, просто без initData):
+  `curl -si -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGVzdA==' https://poker.izzinet.xyz/ws | head -1`
+
 ## Обновление кода на сервере
 
 ```bash

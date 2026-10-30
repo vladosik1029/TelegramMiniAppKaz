@@ -11,6 +11,11 @@ import * as dice from './games/dice.js';
 import * as slots from './games/slots.js';
 import * as mines from './games/mines.js';
 import * as hilo from './games/hilo.js';
+import {
+  ROOM_GAMES, ROOM_ERRORS, MAX_PLAYERS, MIN_BUYIN, MAX_BUYIN,
+  createRoom, joinRoom, leaveRoom, placeBet, clearBets, spinRoulette,
+  getRoom, listRooms, roomPreview, roomState,
+} from './rooms.js';
 
 export const api = Router();
 
@@ -18,6 +23,15 @@ export const api = Router();
 function getUser(req) {
   const header = req.headers['authorization'] || '';
   const initData = header.startsWith('tma ') ? header.slice(4) : '';
+  return userFromInitData(initData);
+}
+
+/**
+ * Пользователь по Telegram initData (REST-заголовок или ?t= у WebSocket).
+ * В DEV_MODE пустая строка = dev-игрок, «dev:<id>» — мок-игрок
+ * (для локальной проверки стола вдвоём). В проде (DEV_MODE=0) — только подпись Telegram.
+ */
+export function userFromInitData(initData) {
   const tgUser = parseInitData(initData);
   if (tgUser) {
     return {
@@ -36,6 +50,10 @@ function getUser(req) {
       dev: true,
     };
   }
+  if (env.DEV_MODE && /^dev:\d{1,12}$/.test(initData)) {
+    const id = Number(initData.slice(4));
+    return { id, username: null, first_name: `Dev${id}`, isAdmin: env.ADMIN_IDS.has(id), dev: true };
+  }
   return null;
 }
 
@@ -46,7 +64,7 @@ function auth(req, res, next) {
   next();
 }
 
-function ensureUser(user) {
+export function ensureUser(user) {
   db.prepare(`
     INSERT INTO users (id, username, first_name, balance)
     VALUES (?, ?, ?, ?)
@@ -78,6 +96,7 @@ function me(user) {
     balance,
     isAdmin: !!user.isAdmin,
     dev: !!user.dev,
+    botUsername: env.BOT_USERNAME,
     history,
   };
 }
@@ -167,18 +186,75 @@ function formatResponse(user, game, bet, result) {
   return { ...result, balance };
 }
 
+const ERRORS = {
+  INSUFFICIENT: 'Недостаточно фишек на балансе',
+  BAD_BET: 'Некорректная ставка',
+  BAD_ACTION: 'Сейчас так нельзя — обновите игру',
+  NO_SESSION: 'Активная игра не найдена — начните новую',
+  BALANCE_TOO_LOW: 'Баланс не может уйти в минус',
+  ...ROOM_ERRORS,
+};
+
+/** Текст ошибки для пользователя или null, если это неожиданное исключение */
+export const errorText = (e) => ERRORS[e?.message] ?? null;
+
 function handleError(e, res) {
-  const map = {
-    INSUFFICIENT: 'Недостаточно фишек на балансе',
-    BAD_BET: 'Некорректная ставка',
-    BAD_ACTION: 'Сейчас так нельзя — обновите игру',
-    NO_SESSION: 'Активная игра не найдена — начните новую',
-    BALANCE_TOO_LOW: 'Баланс не может уйти в минус',
-  };
-  if (map[e.message]) return res.status(400).json({ error: map[e.message] });
+  const text = errorText(e);
+  if (text) return res.status(e.message === 'ROOM_NOT_FOUND' ? 404 : 400).json({ error: text });
   console.error(e);
   res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 }
+
+// ─── столы (мультиплеер) ─────────────────────────────────────────────────────
+// Создание/вход/выход — REST; ставки и спин — по WebSocket (ws.js),
+// но продублированы REST-ом как запасной путь (и для тестов).
+
+api.get('/rooms', (req, res) => {
+  res.json({
+    rooms: listRooms(req.user.id),
+    games: ROOM_GAMES,
+    limits: { maxPlayers: MAX_PLAYERS, minBuyIn: MIN_BUYIN, maxBuyIn: MAX_BUYIN },
+  });
+});
+
+api.post('/rooms', (req, res) => {
+  try {
+    const room = createRoom(req.user, req.body || {});
+    res.json({ room: roomState(room, req.user.id), balance: balanceOf(req.user.id) });
+  } catch (e) { handleError(e, res); }
+});
+
+api.get('/rooms/:id/preview', (req, res) => {
+  try { res.json({ preview: roomPreview(req.params.id, req.user.id) }); } catch (e) { handleError(e, res); }
+});
+
+api.post('/rooms/:id/join', (req, res) => {
+  try {
+    const room = joinRoom(req.user, req.params.id);
+    res.json({ room: roomState(room, req.user.id), balance: balanceOf(req.user.id) });
+  } catch (e) { handleError(e, res); }
+});
+
+api.get('/rooms/:id', (req, res) => {
+  const room = getRoom(req.params.id);
+  if (!room) return handleError(new Error('ROOM_NOT_FOUND'), res);
+  if (!room.members.has(req.user.id)) return handleError(new Error('NOT_IN_ROOM'), res);
+  res.json({ room: roomState(room, req.user.id) });
+});
+
+api.post('/rooms/:id/leave', (req, res) => {
+  try { res.json(leaveRoom(req.user.id, req.params.id)); } catch (e) { handleError(e, res); }
+});
+
+const roomAction = (fn) => (req, res) => {
+  try {
+    const room = fn(req.user.id, req.params.id, req.body || {});
+    res.json({ room: roomState(room, req.user.id) });
+  } catch (e) { handleError(e, res); }
+};
+api.post('/rooms/:id/bet', roomAction(placeBet));
+api.post('/rooms/:id/clear', roomAction(clearBets));
+api.post('/rooms/:id/spin', roomAction(spinRoulette));
 
 // ─── админ: управление балансами ─────────────────────────────────────────────
 api.use('/admin', (req, res, next) => {
