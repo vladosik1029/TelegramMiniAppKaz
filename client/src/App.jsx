@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api, tg, haptic } from './api.js';
+import { api, tg, haptic, startParam } from './api.js';
 import Blackjack from './games/Blackjack.jsx';
 import Ochko from './games/Ochko.jsx';
 import Poker from './games/Poker.jsx';
@@ -13,6 +13,7 @@ import { AnimatedNumber } from './components/fx.jsx';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import Rules from './components/Rules.jsx';
+import Tables from './components/Tables.jsx';
 
 const GAMES = [
   { id: 'blackjack', title: 'Blackjack', subtitle: '21 очко против дилера', icon: '🂡', group: 'cards', accent: 'emerald' },
@@ -25,6 +26,14 @@ const GAMES = [
   { id: 'dice', title: 'Кости', subtitle: 'Сам выбираешь шанс', icon: '🎲', group: 'quick', accent: 'emerald', isNew: true },
 ];
 
+const TABS = [
+  { id: 'games', icon: '🎰', label: 'Игры' },
+  { id: 'tables', icon: '👥', label: 'Столы' },
+  { id: 'wallet', icon: '💰', label: 'Кошелёк' },
+  { id: 'rules', icon: '📖', label: 'Правила' },
+  { id: 'admin', icon: '👑', label: 'Админ', admin: true },
+];
+
 const GROUPS = [
   { id: 'cards', title: '🃏 Карточные' },
   { id: 'quick', title: '⚡ Быстрые' },
@@ -34,7 +43,9 @@ const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Ro
 
 export default function App() {
   const [profile, setProfile] = useState(null);
-  const [tab, setTab] = useState('games'); // games | wallet | admin
+  // приглашение за стол: t.me/<bot>?startapp=room_<id>
+  const [inviteRoomId, setInviteRoomId] = useState(() => (/^room_[\w-]+$/.test(startParam) ? startParam.slice(5) : null));
+  const [tab, setTab] = useState(inviteRoomId ? 'tables' : 'games'); // games | tables | wallet | rules | admin
   const [screenGame, setScreenGame] = useState(null);
   const [err, setErr] = useState('');
 
@@ -123,19 +134,22 @@ export default function App() {
             </main>
           )}
 
+          {tab === 'tables' && (
+            <Tables profile={profile} refresh={refresh}
+              inviteRoomId={inviteRoomId} onInviteHandled={() => setInviteRoomId(null)} />
+          )}
           {tab === 'wallet' && <Wallet profile={profile} refresh={refresh} />}
           {tab === 'rules' && <Rules />}
           {tab === 'admin' && profile.isAdmin && <AdminPanel me={profile} refresh={refresh} />}
         </motion.div>
       </AnimatePresence>
 
-      <nav className="bottombar">
-        <button className={tab === 'games' ? 'active' : ''} onClick={() => { haptic('light'); setTab('games'); }}>🎰 Игры</button>
-        <button className={tab === 'wallet' ? 'active' : ''} onClick={() => { haptic('light'); setTab('wallet'); }}>💰 Кошелёк</button>
-        <button className={tab === 'rules' ? 'active' : ''} onClick={() => { haptic('light'); setTab('rules'); }}>📖 Правила</button>
-        {profile.isAdmin && (
-          <button className={tab === 'admin' ? 'active' : ''} onClick={() => { haptic('light'); setTab('admin'); }}>👑 Админ</button>
-        )}
+      <nav className={`bottombar ${profile.isAdmin ? 'five' : ''}`}>
+        {TABS.filter(t => !t.admin || profile.isAdmin).map(t => (
+          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => { haptic('light'); setTab(t.id); }}>
+            <span className="tab-icon">{t.icon}</span><span className="tab-label">{t.label}</span>
+          </button>
+        ))}
       </nav>
     </>
   );

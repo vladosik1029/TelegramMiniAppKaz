@@ -32,6 +32,34 @@ CREATE TABLE IF NOT EXISTS history (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_history_user ON history(user_id, id DESC);
+
+-- Мультиплеерные столы: у каждого участника свой «банк стола» (бай-ин),
+-- ставки раунда живут в room_bets до спина (при рестарте возвращаются в банк)
+CREATE TABLE IF NOT EXISTS rooms (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  game TEXT NOT NULL,
+  host_id INTEGER NOT NULL,
+  is_public INTEGER NOT NULL,
+  buy_in INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS room_members (
+  room_id TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  bank INTEGER NOT NULL,
+  joined_at INTEGER NOT NULL,
+  PRIMARY KEY (room_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS room_bets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  room_id TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  value INTEGER,
+  amount INTEGER NOT NULL
+);
 `);
 
 /** Транзакция: fn выполняется внутри BEGIN/COMMIT, при ошибке — ROLLBACK */
