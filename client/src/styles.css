@@ -249,21 +249,13 @@ body::before {
 .result-banner.push { background: #3d361d; border: 1px solid #7d6f3f; color: #eada8f; }
 .result-extra { font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 4px; }
 
-/* ─── админ ─────────────────────────────────────────── */
+/* ─── поля ввода ────────────────────────────────────── */
 .input {
   width: 100%; background: var(--bg2); color: var(--text);
   border: 1px solid #3a6247; border-radius: 10px;
   padding: 11px 14px; font-size: 14px; margin: 10px 0;
 }
 .input.short { width: 110px; margin: 0; text-align: center; font-weight: 700; }
-.admin-amount-row { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin: 6px 0 12px; }
-.admin-user { background: var(--card); border: 1px solid #24402d; border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
-.admin-user-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; cursor: pointer; }
-.admin-name { font-weight: 700; font-size: 14px; }
-.admin-username { color: var(--muted); font-weight: 400; font-size: 12px; }
-.admin-meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
-.admin-balance { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
-.admin-actions { display: flex; gap: 8px; padding: 0 14px 12px; }
 
 /* ─── нижнее меню ───────────────────────────────────── */
 .bottombar {

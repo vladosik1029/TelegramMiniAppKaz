@@ -173,7 +173,7 @@ function GameTile({ g, onClick }) {
 }
 
 /** Нижняя шторка (на ПК — окно по центру), закрывается по фону и Esc */
-function Sheet({ open, onClose, children }) {
+export function Sheet({ open, onClose, children }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();

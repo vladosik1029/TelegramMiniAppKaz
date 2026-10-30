@@ -62,6 +62,11 @@ CREATE TABLE IF NOT EXISTS room_bets (
 );
 `);
 
+// last_seen появился позже — добавляем колонку в старые базы
+if (!db.prepare('PRAGMA table_info(users)').all().some(c => c.name === 'last_seen')) {
+  db.exec('ALTER TABLE users ADD COLUMN last_seen TEXT');
+}
+
 /** Транзакция: fn выполняется внутри BEGIN/COMMIT, при ошибке — ROLLBACK */
 export function tx(fn) {
   db.exec('BEGIN');
