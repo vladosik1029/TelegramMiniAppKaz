@@ -35,6 +35,8 @@ const WHEEL_BG = `conic-gradient(${ORDER.map((n, i) => {
   const c = colorOf(n) === 'red' ? '#b8352b' : colorOf(n) === 'green' ? '#1f9450' : '#232830';
   return `${c} ${(i * STEP).toFixed(3)}deg ${((i + 1) * STEP).toFixed(3)}deg`;
 }).join(', ')})`;
+// тонкие золотые перегородки между лунками
+const WHEEL_FRETS = `repeating-conic-gradient(rgba(230, 192, 101, .6) 0deg .45deg, transparent .45deg ${STEP.toFixed(3)}deg)`;
 
 /** Угол, при котором центр лунки idx встаёт под маркер, + turns полных оборотов вперёд */
 export function nextWheelAngle(current, idx, turns = 5) {
@@ -59,6 +61,7 @@ export default function Wheel({ spin, result, idleText = 'ДЕЛАЙ СТАВК�
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
 
+  // setState с тем же числом React пропускает — перерисовка только при смене лунки
   useMotionValueEvent(rot, 'change', (v) => { if (spinning) setLive(pocketAt(v)); });
 
   useEffect(() => {
@@ -84,19 +87,25 @@ export default function Wheel({ spin, result, idleText = 'ДЕЛАЙ СТАВК�
   return (
     <div className="wheel-box">
       <div className="wheel-pointer" />
-      <motion.div className="wheel" style={{ rotate: rot }}>
-        <div className="wheel-face" style={{ background: WHEEL_BG }} />
-        <div className="wheel-nums" aria-hidden>
-          {ORDER.map((n, i) => (
-            <span key={n} className="wheel-num" style={{ transform: `rotate(${(i + 0.5) * STEP}deg)` }}>
-              <b>{n}</b>
-            </span>
-          ))}
-        </div>
-      </motion.div>
-      <motion.div className="wheel-ball-ring" style={{ rotate: ballRot }}>
-        <div className={`wheel-ball ${spinning ? 'rolling' : ''}`} />
-      </motion.div>
+      {/* Круглая маска: повёрнутые квадратные слои не вылезают за колесо и не
+          меняют размер страницы во время вращения (из-за этого дёргалось меню) */}
+      <div className="wheel-clip">
+        <motion.div className="wheel" style={{ rotate: rot }}>
+          <div className="wheel-face" style={{ background: WHEEL_BG }} />
+          <div className="wheel-frets" style={{ background: WHEEL_FRETS }} />
+          <div className="wheel-inner" />
+          <div className="wheel-nums" aria-hidden>
+            {ORDER.map((n, i) => (
+              <span key={n} className="wheel-num" style={{ transform: `rotate(${(i + 0.5) * STEP}deg)` }}>
+                <b>{n}</b>
+              </span>
+            ))}
+          </div>
+        </motion.div>
+        <motion.div className="wheel-ball-ring" style={{ rotate: ballRot }}>
+          <div className={`wheel-ball ${spinning ? 'rolling' : ''}`} />
+        </motion.div>
+      </div>
       <div className={`wheel-hub ${spinning ? 'live' : ''}`}>
         {spinning ? (
           <>
