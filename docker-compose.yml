@@ -15,3 +15,10 @@ services:
       DB_PATH: /app/server/data/casino.db
     volumes:
       - ./casino-data:/app/server/data
+    networks:
+      - remnawave-network
+
+# Внешняя сеть стека Remnawave — чтобы Caddy мог обращаться к casino по имени контейнера
+networks:
+  remnawave-network:
+    external: true
