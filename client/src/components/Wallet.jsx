@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { ResultBanner } from './ui.jsx';
 
 const GAME_NAMES = {
-  blackjack: 'Blackjack', ochko: 'Очко', poker: 'Покер', roulette: 'Рулетка', roulette_room: 'Рулетка · стол', blackjack_room: 'Blackjack · стол', ochko_room: 'Очко · стол', poker_room: 'Покер · стол', crash: 'Ракета',
+  blackjack: 'Blackjack', ochko: 'Очко', poker: 'Покер', roulette: 'Рулетка', roulette_room: 'Рулетка · стол', blackjack_room: 'Blackjack · стол', ochko_room: 'Очко · стол', poker_room: 'Покер · стол', durak_room: 'Дурак · стол', crash: 'Ракета',
   slots: 'Слоты', mines: 'Сапёр', hilo: 'Выше / Ниже', dice: 'Кости',
 };
 

@@ -14,7 +14,7 @@ const CHIPS = [5, 10, 25, 50, 100, 500];
 
 const ACTION_LABEL = {
   hit: 'Ещё карту', stand: 'Хватит', stop: 'Хватит', double: 'Удвоить',
-  check: 'Чек', fold: 'Пас',
+  check: 'Чек', fold: 'Пас', take: 'Беру', pass: 'Пас',
 };
 
 const STATUS_LABEL = {
@@ -52,6 +52,8 @@ function TimerBar({ ms, total }) {
 export default function CardTable({ room, profile, connected, head, err, setErr, leaveLabel, onLeave }) {
   const r = room.round;
   const poker = room.game === 'poker';
+  const durak = room.game === 'durak';
+  const pvp = poker || durak; // «Готов» = сесть в партию, ставка фиксированная
   const me = room.players.find(p => p.id === profile.id);
   const mySeat = r.seats.find(s => s.id === profile.id);
   const myStake = me?.bet ?? 0;
@@ -79,20 +81,20 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
   }, [r.phase]);
 
   const send = (msg) => { haptic('light'); setErr(''); wsSend(msg); };
-  const myTurn = r.you.actions.length > 0;
+  const myTurn = durak ? r.phase === 'playing' && r.turnId === profile.id : r.you.actions.length > 0;
   const turnSeat = r.seats.find(s => s.id === r.turnId);
 
   // «Готов»: ждём игроков онлайн, у которых есть чем играть (как на сервере)
-  const need = poker ? r.ante : 1;
+  const need = pvp ? r.ante : 1;
   const waitFor = room.players.filter(p => p.online && (p.bank >= need || p.bet > 0));
   const readyCount = waitFor.filter(p => p.ready).length;
 
   const statusLine = () => {
     if (r.phase === 'betting') {
-      if (r.deadlineMs) return `Раздача через ${sec} с`;
-      return poker ? 'Жми «Готов», чтобы сесть в раздачу' : 'Делайте ставки';
+      if (r.deadlineMs) return `${durak ? 'Партия' : 'Раздача'} через ${sec} с`;
+      return pvp ? `Жми «Готов», чтобы сесть ${durak ? 'в партию' : 'в раздачу'}` : 'Делайте ставки';
     }
-    if (r.phase === 'results') return `Следующая раздача через ${sec} с`;
+    if (r.phase === 'results') return `${durak ? 'Следующая партия' : 'Следующая раздача'} через ${sec} с`;
     if (myTurn) return `Твой ход · ${sec} с`;
     return turnSeat ? `Ходит ${turnSeat.name} · ${sec} с` : PHASE_TITLE[r.phase];
   };
@@ -103,12 +105,14 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
 
       <div className="table-felt ct-felt">
         <div className="ct-status">
-          <span className="ct-phase">{PHASE_TITLE[r.phase]}{r.hand ? ` · раздача ${r.hand}` : ''}</span>
+          <span className="ct-phase">{PHASE_TITLE[r.phase]}{r.hand ? ` · ${durak ? 'партия' : 'раздача'} ${r.hand}` : ''}</span>
           <span className={`ct-clock ${myTurn ? 'mine' : ''}`}>{statusLine()}</span>
         </div>
         <TimerBar ms={r.deadlineMs} total={r.phase === 'betting' || r.phase === 'results' ? r.deadlineMs : r.turnTotalMs} />
 
-        {poker ? (
+        {durak ? (
+          <DurakBoard r={r} profile={profile} />
+        ) : poker ? (
           <div className="ct-pot">
             <small>Банк раздачи</small>
             <b><AnimatedNumber value={r.pot} /> 🪙</b>
@@ -129,7 +133,7 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
         )}
 
         {/* места игроков в раздаче */}
-        <div className="ct-seats">
+        {!durak && <div className="ct-seats">
           {r.seats.length === 0 && (
             <div className="ct-empty">{poker ? 'Нужно минимум двое — жмите «Готов»' : 'Раздача начнётся, когда все нажмут «Готов»'}</div>
           )}
@@ -141,7 +145,7 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
                 setDiscard(prev => { const n = new Set(prev); n.has(i) ? n.delete(i) : n.add(i); return n; });
               }} />
           ))}
-        </div>
+        </div>}
 
         <AnimatePresence>
           {r.phase === 'results' && mySeat?.result && (
@@ -163,12 +167,12 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
             <b><AnimatedNumber value={room.you.roomBalance} /> 🪙</b>
           </div>
           <div className="room-bank right">
-            <small>{poker ? 'Вложено в раздачу' : 'Ставка'}</small>
+            <small>{poker ? 'Вложено в раздачу' : durak ? 'Ставка партии' : 'Ставка'}</small>
             <b>{fmt(myStake)} 🪙</b>
           </div>
         </div>
 
-        {r.phase === 'betting' && !poker && (
+        {r.phase === 'betting' && !pvp && (
           <>
             <div className="chip-row">
               {CHIPS.map(c => (
@@ -187,6 +191,13 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
           </>
         )}
 
+        {r.phase === 'betting' && durak && (
+          <div className="hint">
+            Подкидной дурак на 2–4 игроков, колода 36 карт. Ставка за партию {fmt(r.ante)} 🪙:
+            дурак её теряет, банк делится между остальными.
+          </div>
+        )}
+
         {r.phase === 'betting' && poker && (
           <div className="hint">
             Анте {fmt(r.ante)} 🪙 спишется при раздаче. Ставки фиксированные: {fmt(r.ante * 2)} до обмена и {fmt(r.ante * 4)} после,
@@ -198,19 +209,23 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
           <>
             <div className="actions">
               <motion.button whileTap={{ scale: .96 }} className={`btn big-flex ${me?.ready ? 'ready-on' : 'gold'}`}
-                disabled={!connected || (!me?.ready && (poker ? room.you.roomBalance < r.ante : !myStake))}
+                disabled={!connected || (!me?.ready && (pvp ? room.you.roomBalance < r.ante : !myStake))}
                 onClick={() => send({ op: 'ready', ready: !me?.ready })}>
-                {me?.ready ? '✓ Готов · отменить' : poker
-                  ? (room.you.roomBalance < r.ante ? 'Не хватает на анте' : 'Готов, сдавайте ✋')
+                {me?.ready ? '✓ Готов · отменить' : pvp
+                  ? (room.you.roomBalance < r.ante ? 'Не хватает фишек' : 'Готов, сдавайте ✋')
                   : myStake ? 'Готов ✋' : 'Сделай ставку'}
               </motion.button>
             </div>
             <div className="hint ready-hint">
               Готовы {readyCount} из {waitFor.length}.{' '}
-              {poker ? 'Раздача начнётся, когда готовы все (минимум двое) или через 15 с после второго «Готов».'
+              {pvp ? `${durak ? 'Партия' : 'Раздача'} начнётся, когда готовы все (минимум двое) или через 15 с после второго «Готов».`
                 : 'Раздача начнётся, когда готовы все или через 15 с после первого «Готов».'}
             </div>
           </>
+        )}
+
+        {durak && (r.phase === 'playing' || r.phase === 'results') && mySeat && r.durak.hand.length > 0 && (
+          <DurakHand r={r} myTurn={myTurn} onPlay={(card) => send({ op: 'act', action: 'play', card })} />
         )}
 
         {r.phase !== 'betting' && r.phase !== 'results' && (
@@ -221,13 +236,16 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
                   onClick={() => send({ op: 'act', action: 'draw', discard: [...discard] })}>
                   {discard.size ? `Обменять ${discard.size} ↺` : 'Оставить все карты'}
                 </motion.button>
+              ) : durak && !r.you.actions.length ? (
+                <div className="room-wait">{r.durak.table.length ? 'Подкинь карту' : 'Твой заход — выбери карту'}</div>
               ) : r.you.actions.map(a => (
                 <motion.button key={a} variants={actionsItem} whileTap={{ scale: .96 }}
                   className={`btn ${a === 'fold' ? 'danger' : a === 'raise' || a === 'double' ? 'gold' : ''}`}
                   onClick={() => send({ op: 'act', action: a })}>
                   {a === 'call' ? `Колл ${fmt(r.you.toCall)}`
                     : a === 'raise' ? (r.curBet ? `Рейз до ${fmt(r.you.raiseTo)}` : `Бет ${fmt(r.you.raiseTo)}`)
-                      : ACTION_LABEL[a]}
+                      : a === 'pass' ? (r.durak.attackerId === profile.id && !r.durak.took ? 'Бито' : 'Пас')
+                        : ACTION_LABEL[a]}
                 </motion.button>
               ))}
             </motion.div>
@@ -238,7 +256,7 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
           )
         )}
         {r.phase === 'draw' && myTurn && <div className="hint">Тапни карты, которые хочешь сменить.</div>}
-        {r.phase === 'results' && <div className="room-wait">Следующая раздача через {sec} с</div>}
+        {r.phase === 'results' && <div className="room-wait">{durak ? 'Следующая партия' : 'Следующая раздача'} через {sec} с</div>}
 
         {err && <div className="notice">⚠ {err}</div>}
       </div>
@@ -250,7 +268,7 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
             <span className={`dot ${p.online ? 'on' : ''}`} />
             <span className="player-name">{p.isHost && '👑 '}{p.name}{p.id === profile.id && ' (ты)'}</span>
             {r.phase === 'betting' && p.ready && <span className="player-ready">✓ готов</span>}
-            {p.bet > 0 && <span className="player-bet">{poker ? 'в банке' : 'ставка'} {fmt(p.bet)}</span>}
+            {p.bet > 0 && <span className="player-bet">{pvp ? 'в банке' : 'ставка'} {fmt(p.bet)}</span>}
             <span className="player-bank"><AnimatedNumber value={p.bank} /> 🪙</span>
           </div>
         ))}
@@ -292,6 +310,91 @@ function Seat({ seat: s, round: r, poker, me, active, discard, onToggle }) {
           {res.label} · {res.net > 0 ? '+' : ''}{fmt(res.net)} 🪙
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Дурак ───────────────────────────────────────────────────────────────────
+
+const SUIT_COLOR = (s) => (s === '♥' || s === '♦' ? 'red' : 'black');
+
+/** Стол дурака: соперники, козырь с колодой, пары «атака / защита» */
+function DurakBoard({ r, profile }) {
+  const d = r.durak;
+  const results = r.phase === 'results';
+  const others = r.seats.filter(s => s.id !== profile.id);
+  const role = (s) => (s.id === d.defenderId ? '🛡' : s.id === d.attackerId ? '⚔' : '');
+  return (
+    <div className="dk">
+      <div className="dk-opps">
+        {r.seats.length === 0 && <div className="ct-empty">Нужно минимум двое — жмите «Готов»</div>}
+        {others.map(s => (
+          <div key={s.id} className={`dk-opp ${s.id === r.turnId ? 'active' : ''} ${s.out ? 'out' : ''}`}>
+            <div className="dk-opp-name">{role(s)} {s.name}{s.left ? ' · ушёл' : ''}</div>
+            {results && s.cards.length ? (
+              <div className="cards ct-cards small dk-reveal">{s.cards.map((c, i) => <CardView key={i} card={c} />)}</div>
+            ) : (
+              <div className="dk-backs">
+                {Array.from({ length: Math.min(s.count, 8) }, (_, i) => <span key={i} className="dk-back" />)}
+                <b>{s.out ? `вышел ${s.place}-м` : s.count}</b>
+              </div>
+            )}
+            {s.result && <div className={`ct-result ${s.result.outcome}`}>{s.result.label} · {s.result.net > 0 ? '+' : ''}{fmt(s.result.net)}</div>}
+          </div>
+        ))}
+      </div>
+
+      <div className="dk-middle">
+        <div className="dk-deck">
+          <div className="dk-deck-cards">
+            {d.deck > 1 && <div className="dk-pile"><div className="card back"><div className="card-back-pattern" /></div></div>}
+            {d.trumpCard && d.deck > 0 && <div className="dk-trump"><CardView card={d.trumpCard} /></div>}
+          </div>
+          <small>{d.deck ? `в колоде ${d.deck}` : 'колода пуста'}</small>
+          {d.trump && <span className={`dk-trump-suit ${SUIT_COLOR(d.trump)}`}>козырь {d.trump}</span>}
+        </div>
+        <div className="dk-table">
+          {d.table.length === 0 && !results && r.seats.length > 0 && (
+            <div className="ct-empty">{r.turnId === profile.id ? 'Твой заход' : 'Ждём заход'}</div>
+          )}
+          <AnimatePresence>
+            {d.table.map((p, i) => (
+              <motion.div key={`${r.hand}-${p.a.r}${p.a.s}`} className="dk-pair"
+                initial={{ opacity: 0, y: 30, scale: .8 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: .6 }}>
+                <CardView card={p.a} />
+                {p.d && <div className="dk-cover"><CardView card={p.d} /></div>}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+        <div className="dk-meta">
+          {d.took && !results && <span className="ct-tag bust">берёт</span>}
+          {d.discard > 0 && <small>бито {d.discard}</small>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Своя рука: доступные карты подсвечены, тап — сыграть */
+function DurakHand({ r, myTurn, onPlay }) {
+  const d = r.durak;
+  const role = r.phase === 'results' ? 'Твои карты' : d.defenderId === r.seats[d.meIdx]?.id ? 'Ты отбиваешься 🛡' : d.attackerId === r.seats[d.meIdx]?.id ? 'Ты заходишь ⚔' : 'Можешь подкидывать';
+  return (
+    <div className="dk-hand-wrap">
+      <div className="dk-hand-title">{role} · {d.hand.length} карт</div>
+      <div className={`dk-hand ${d.hand.length > 6 ? 'many' : ''}`}>
+        {d.hand.map((c, i) => {
+          const ok = myTurn && d.playable.includes(i);
+          return (
+            <motion.button key={`${c.r}${c.s}`} layout whileTap={ok ? { scale: .92, y: -6 } : undefined}
+              className={`dk-card ${ok ? 'ok' : ''} ${c.s === d.trump ? 'trump' : ''}`} disabled={!ok}
+              onClick={() => ok && onPlay(c)}>
+              <CardView card={c} />
+            </motion.button>
+          );
+        })}
+      </div>
     </div>
   );
 }

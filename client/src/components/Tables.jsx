@@ -10,8 +10,8 @@ import Wheel, { ROULETTE_BETS, COLOR_NAME, NumberStrip, colorOf } from './Wheel.
 import { AnimatedNumber } from './fx.jsx';
 import CardTable from './CardTable.jsx';
 
-const GAME_ICON = { roulette: '🎡', blackjack: '🂡', ochko: '♠️', poker: '🂱' };
-const GAME_TITLE = { roulette: 'рулетка', blackjack: 'блэкджек', ochko: 'очко', poker: 'покер' };
+const GAME_ICON = { roulette: '🎡', blackjack: '🂡', ochko: '♠️', poker: '🂱', durak: '🃏' };
+const GAME_TITLE = { roulette: 'рулетка', blackjack: 'блэкджек', ochko: 'очко', poker: 'покер', durak: 'дурак' };
 const fmt = (n) => Number(n).toLocaleString('ru-RU');
 
 export default function Tables({ profile, refresh, inviteRoomId, onInviteHandled }) {
