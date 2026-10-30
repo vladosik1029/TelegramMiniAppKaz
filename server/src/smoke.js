@@ -6,6 +6,7 @@ import * as bj from './games/blackjack.js';
 import * as ochko from './games/ochko.js';
 import * as poker from './games/poker.js';
 import * as dice from './games/dice.js';
+import * as plinko from './games/plinko.js';
 import * as slots from './games/slots.js';
 import * as mines from './games/mines.js';
 import * as hilo from './games/hilo.js';
@@ -129,6 +130,23 @@ for (const o of [null, {}, { dir: 'under', target: 1 }, { dir: 'over', target: 9
 assert(badDice === 5, 'dice отклоняет плохие opts');
 
 rtp('Слоты', 40000, () => slots.start().returnMult);
+
+// плинко: точный средний возврат таблиц по биномиальному распределению + симуляция
+const binom = (n, k) => { let c = 1; for (let i = 1; i <= k; i++) c = c * (n - i + 1) / i; return c; };
+for (const [risk, t] of Object.entries(plinko.TABLES)) {
+  assert(t.length === plinko.ROWS + 1, `plinko ${risk}: ${plinko.ROWS + 1} лунок`);
+  const ev = t.reduce((s, m, k) => s + m * binom(plinko.ROWS, k) / 2 ** plinko.ROWS, 0);
+  assert(ev > 0.98 && ev < 0.995, `plinko ${risk}: возврат ${ev}`);
+  console.log(`Плинко (${risk}): точный возврат = ${ev.toFixed(4)}`);
+  rtp(`Плинко (${risk}), симуляция`, 40000, () => {
+    const r = plinko.start(10, { risk });
+    assert(r.view.path.length === plinko.ROWS && r.view.slot === r.view.path.reduce((a, b) => a + b, 0), 'plinko path');
+    return r.returnMult;
+  });
+}
+let badPlinko = 0;
+for (const o of [null, {}, { risk: 'x' }, { risk: 'toString' }]) { try { plinko.start(10, o); } catch { badPlinko++; } }
+assert(badPlinko === 4, 'plinko отклоняет плохие opts');
 
 // сапёр: открываем 3 случайные клетки и забираем
 rtp('Сапёр (3 мины, 3 клетки)', 20000, () => {

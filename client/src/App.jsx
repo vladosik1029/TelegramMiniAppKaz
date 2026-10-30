@@ -10,6 +10,7 @@ import Mines from './games/Mines.jsx';
 import HiLo from './games/HiLo.jsx';
 import Dice from './games/Dice.jsx';
 import Crash from './games/Crash.jsx';
+import Plinko from './games/Plinko.jsx';
 import { AnimatedNumber } from './components/fx.jsx';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
@@ -22,6 +23,7 @@ const GAMES = [
   { id: 'poker', title: 'Покер', subtitle: 'Пятикарточный дро-покер', icon: '🂱', group: 'cards', accent: 'sapphire' },
   { id: 'hilo', title: 'Выше / Ниже', subtitle: 'Угадай следующую карту', icon: '🃏', group: 'cards', accent: 'amber' },
   { id: 'crash', title: 'Ракета', subtitle: 'Забери до взрыва · онлайн', icon: '🚀', group: 'quick', accent: 'amber' },
+  { id: 'plinko', title: 'Плинко', subtitle: 'Шарик через колышки, до ×170', icon: '🟡', group: 'quick', accent: 'violet' },
   { id: 'roulette', title: 'Рулетка', subtitle: 'Европейская, 37 лунок', icon: '🎡', group: 'quick', accent: 'ruby' },
   { id: 'slots', title: 'Слоты', subtitle: '3 барабана, до ×200', icon: '🎰', group: 'quick', accent: 'violet' },
   { id: 'mines', title: 'Сапёр', subtitle: 'Открывай алмазы, беги от мин', icon: '💎', group: 'quick', accent: 'sapphire' },
@@ -41,7 +43,7 @@ const GROUPS = [
   { id: 'quick', title: '⚡ Быстрые' },
 ];
 
-const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Roulette, slots: Slots, mines: Mines, hilo: HiLo, dice: Dice, crash: Crash };
+const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Roulette, slots: Slots, mines: Mines, hilo: HiLo, dice: Dice, crash: Crash, plinko: Plinko };
 
 export default function App() {
   const [profile, setProfile] = useState(null);
