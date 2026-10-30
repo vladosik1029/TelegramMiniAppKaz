@@ -22,7 +22,8 @@ TelegramMiniAppKaz/
 ├── server/               # Node.js (Express) — API и вся игровая логика
 │   └── src/
 │       ├── index.js      # точка входа (API + раздача собранного клиента)
-│       ├── routes.js     # роуты: профиль, игры, админ
+│       ├── routes.js     # роуты: профиль, игры, столы
+│       ├── admin.js      # админка: поиск игроков, карточка, баланс, журнал с отменой
 │       ├── db.js         # SQLite (встроенный node:sqlite) — юзеры, сессии, история
 │       ├── telegram.js   # проверка подписи Telegram initData (HMAC)
 │       ├── bot.js        # скрипт привязки MiniApp к боту
@@ -208,7 +209,10 @@ docker logs casino --tail 20
 | POST | `/api/init` | профиль: баланс, история; авторизация через `Authorization: tma <initData>` |
 | POST | `/api/games/:game/start` | `{bet}` — начало раунда (blackjack/ochko/poker) |
 | POST | `/api/games/:game/action` | ход: blackjack `hit/stand/double`, ochko `hit/stop`, poker `{discard:[0..4]}` |
-| GET/POST | `/api/admin/users`, `/api/admin/balance` | админ: список игроков, `{userId, mode: set/add/sub, amount}` |
+| GET | `/api/admin/users?q=&filter=&sort=&offset=&limit=` | админ: поиск (имя, @username, id), фильтры `active/new/zero/tables/admins`, сортировка, статистика |
+| GET | `/api/admin/users/:id` | админ: карточка игрока — баланс, статистика по играм, последние игры, столы, журнал |
+| POST | `/api/admin/balance` | админ: `{userId, mode: set/add/sub, amount, comment?}`, пишется в журнал |
+| GET/POST | `/api/admin/log`, `/api/admin/log/:id/undo` | админ: журнал изменений балансов и отмена записи |
 
 Защита: подпись initData (HMAC-SHA256 по токену бота), свежесть ≤ 24 ч,
 ставка проверяется на сервере, балансы меняются в SQL-транзакциях, минус невозможен.

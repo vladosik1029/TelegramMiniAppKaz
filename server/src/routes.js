@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-  db, tx, balanceOf, changeBalance, setBalance, addHistory,
+  db, tx, balanceOf, changeBalance, addHistory,
 } from './db.js';
 import { env, parseInitData, MIN_BET, MAX_BET } from './telegram.js';
 import * as blackjack from './games/blackjack.js';
@@ -19,6 +19,7 @@ import {
   getRoom, listRooms, roomPreview, roomState,
 } from './rooms.js';
 import { CRASH_ERRORS } from './crash.js';
+import { admin } from './admin.js';
 
 export const api = Router();
 
@@ -69,11 +70,12 @@ function auth(req, res, next) {
 
 export function ensureUser(user) {
   db.prepare(`
-    INSERT INTO users (id, username, first_name, balance)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO users (id, username, first_name, balance, last_seen)
+    VALUES (?, ?, ?, ?, datetime('now'))
     ON CONFLICT(id) DO UPDATE SET
       username = excluded.username,
-      first_name = excluded.first_name
+      first_name = excluded.first_name,
+      last_seen = excluded.last_seen
   `).run(user.id, user.username, user.first_name, env.START_BALANCE);
 }
 
@@ -261,41 +263,10 @@ api.post('/rooms/:id/clear', roomAction(clearBets));
 api.post('/rooms/:id/ready', roomAction(setReady));
 api.post('/rooms/:id/act', roomAction(playAction));
 
-// ─── админ: управление балансами ─────────────────────────────────────────────
+// ─── админ: игроки, балансы, журнал (server/src/admin.js) ───────────────────
 api.use('/admin', (req, res, next) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Только для админов' });
   next();
 });
 
-api.get('/admin/users', (req, res) => {
-  const users = db.prepare(`
-    SELECT u.id, u.username, u.first_name, u.balance, u.created_at,
-      COALESCE(SUM(h.net), 0) AS total_net,
-      COUNT(h.id) AS games
-    FROM users u LEFT JOIN history h ON h.user_id = u.id
-    GROUP BY u.id ORDER BY u.id
-  `).all();
-  res.json({ users });
-});
-
-api.post('/admin/balance', (req, res) => {
-  const { userId, mode, amount } = req.body || {};
-  const amt = Math.floor(Number(amount));
-  if (!Number.isInteger(amt) || amt <= 0) return res.status(400).json({ error: 'Некорректная сумма' });
-  if (!['set', 'add', 'sub'].includes(mode)) return res.status(400).json({ error: 'Некорректный режим' });
-
-  const target = db.prepare('SELECT id FROM users WHERE id = ?').get(Number(userId));
-  if (!target) return res.status(404).json({ error: 'Пользователь не найден' });
-
-  try {
-    tx(() => {
-      if (mode === 'set') setBalance(target.id, amt);
-      else if (mode === 'add') changeBalance(target.id, amt);
-      else changeBalance(target.id, -amt);
-    });
-    res.json({ ok: true, balance: balanceOf(target.id) });
-  } catch (e) {
-    if (e.message === 'BALANCE_TOO_LOW') return res.status(400).json({ error: 'Баланс не может уйти в минус' });
-    throw e;
-  }
-});
+api.use('/admin', admin);

@@ -5,5 +5,6 @@ import './styles.css';
 import './fx.css';
 import './tables.css';
 import './layout.css';
+import './admin.css';
 
 createRoot(document.getElementById('root')).render(<App />);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api.js';
 import { ResultBanner } from './ui.jsx';
 
-const GAME_NAMES = {
+export const GAME_NAMES = {
   blackjack: 'Blackjack', ochko: 'Очко', poker: 'Покер', roulette: 'Рулетка', roulette_room: 'Рулетка · стол', blackjack_room: 'Blackjack · стол', ochko_room: 'Очко · стол', poker_room: 'Покер · стол', durak_room: 'Дурак · стол', crash: 'Ракета', plinko: 'Плинко', baccarat: 'Баккара',
   slots: 'Слоты', mines: 'Сапёр', hilo: 'Выше / Ниже', dice: 'Кости',
 };

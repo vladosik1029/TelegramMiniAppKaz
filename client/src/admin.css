@@ -1,0 +1,170 @@
+/* ─── Админ-панель ───────────────────────────────────────────────────────────
+   Телефон: список игроков, карточка — в нижней шторке.
+   ПК (от 900 px): список слева, карточка выбранного игрока справа. */
+
+.admin .section-title { margin: 4px 0 0; }
+.adm-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.adm-tabs { display: flex; gap: 4px; background: var(--bg2); border: 1px solid #24402d; border-radius: 12px; padding: 3px; }
+.adm-tabs button {
+  border: none; background: none; color: var(--muted); cursor: pointer;
+  font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 9px;
+}
+.adm-tabs button.active { background: var(--card); color: var(--gold); }
+
+.adm-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+.adm-stat { background: var(--card); border: 1px solid #24402d; border-radius: 12px; padding: 10px 12px; }
+.adm-stat-value { font-size: 18px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.adm-stat-label { font-size: 11px; color: var(--muted); }
+.adm-stat-sub { font-size: 11px; color: #8fe0b0; margin-top: 2px; }
+
+.adm-search { position: relative; }
+.adm-search .input { margin: 0; padding-left: 38px; padding-right: 40px; font-size: 15px; min-height: 46px; }
+.adm-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; opacity: .7; pointer-events: none; }
+.adm-search-clear {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--card); color: var(--muted); font-size: 13px;
+}
+
+.adm-filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 8px; }
+.adm-pill {
+  border: 1px solid #2b4a35; background: var(--bg2); color: var(--muted); cursor: pointer;
+  border-radius: 999px; padding: 7px 12px; font-size: 12.5px; font-weight: 700;
+}
+.adm-pill.active { background: rgba(230, 192, 101, .14); border-color: var(--gold2); color: var(--gold); }
+
+.adm-listbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.adm-select {
+  background: var(--bg2); color: var(--text); border: 1px solid #2b4a35; border-radius: 10px;
+  padding: 7px 10px; font-size: 13px; font-weight: 600; max-width: 60%;
+}
+
+.adm-list { display: flex; flex-direction: column; gap: 6px; }
+.adm-row {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  background: var(--card); border: 1px solid #24402d; border-radius: 12px; padding: 10px 12px;
+  color: var(--text); font: inherit;
+}
+.adm-row:active { transform: scale(.99); }
+.adm-row.active { border-color: var(--gold2); box-shadow: 0 0 0 1px var(--gold2) inset; }
+.adm-row-main { flex: 1; min-width: 0; }
+.adm-row-name { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14.5px; min-width: 0; }
+.adm-row-meta { color: var(--muted); font-size: 11.5px; margin-top: 2px; overflow-wrap: anywhere; }
+.adm-row-bal { flex: none; text-align: right; }
+.adm-coins { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.adm-ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-tag { flex: none; font-size: 10.5px; font-weight: 700; color: var(--muted); background: var(--bg2); border-radius: 999px; padding: 1px 7px; }
+.adm-tag.gold { color: var(--gold); background: rgba(230, 192, 101, .12); }
+
+.adm-avatar {
+  flex: none; width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; color: #f2f5f2;
+}
+.adm-avatar.big { width: 54px; height: 54px; font-size: 22px; }
+
+.adm-more { width: 100%; margin-top: 10px; }
+.adm-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 26px 12px; border: 1px dashed #2b4a35; border-radius: 12px; }
+
+.pos { color: #8fe0b0; }
+.neg { color: #f0a7ab; }
+.muted { color: var(--muted); font-weight: 400; }
+
+/* карточка игрока */
+/* блок, а не flex: иначе плавающая кнопка ✕ шторки сужает карточку */
+.adm-card > * + * { margin-top: 12px; }
+.adm-card-head { display: flex; align-items: center; gap: 12px; padding-right: 40px; }
+.adm-card-who { min-width: 0; flex: 1; }
+.adm-card-name { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; min-width: 0; }
+.adm-card-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; margin-top: 2px; }
+.adm-card-links a { color: #8cc8ff; text-decoration: none; }
+.adm-copy {
+  border: 1px solid #2b4a35; background: var(--bg2); color: var(--text); cursor: pointer;
+  border-radius: 8px; padding: 2px 8px; font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.adm-card-balance {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 10px;
+  background: linear-gradient(160deg, #24422f, #17291f); border: 1px solid #2b4a35; border-radius: 14px; padding: 12px 14px;
+}
+.adm-big-coins { font-size: 26px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+.adm-right { text-align: right; }
+
+.adm-editor { background: var(--card); border: 1px solid #24402d; border-radius: 14px; padding: 12px; }
+.adm-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.adm-mode {
+  border: 1px solid #2b4a35; background: var(--bg2); color: var(--muted); cursor: pointer;
+  border-radius: 10px; padding: 10px 4px; font-size: 13px; font-weight: 700; min-height: 44px; white-space: nowrap;
+}
+.adm-mode.add.active { background: #1d3d2a; border-color: #3f7d55; color: #8fe0b0; }
+.adm-mode.sub.active { background: #3d1d20; border-color: #7d3f46; color: #f0a7ab; }
+.adm-mode.set.active { background: #3d361d; border-color: #7d6f3f; color: #eada8f; }
+.adm-amount { position: relative; }
+.adm-amount .input { font-size: 22px; font-weight: 800; text-align: center; color: var(--gold); padding-right: 44px; padding-left: 44px; margin: 10px 0 8px; font-variant-numeric: tabular-nums; }
+.adm-amount-coin { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none; }
+.adm-quick { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; }
+.adm-quick .chip { min-height: 36px; padding-left: 4px; padding-right: 4px; }
+.adm-editor > .input { margin: 10px 0 8px; }
+.adm-preview { text-align: center; font-size: 14px; color: var(--muted); margin: 2px 0 10px; font-variant-numeric: tabular-nums; }
+.adm-preview b { color: var(--gold); }
+.adm-preview.bad { color: #f0a7ab; }
+.adm-go { width: 100%; }
+.adm-confirm {
+  background: var(--bg2); border: 1px solid var(--gold2); border-radius: 12px; padding: 12px;
+  font-size: 14px; display: flex; flex-direction: column; gap: 10px;
+}
+.adm-confirm-btns { display: flex; gap: 8px; }
+.adm-confirm-btns .btn { min-width: 0; }
+.adm-msg { margin-top: 8px; font-size: 13px; border-radius: 10px; padding: 8px 10px; }
+.adm-msg.ok { background: #1d3d2a; color: #8fe0b0; }
+.adm-msg.bad { background: #3d1d20; color: #f0a7ab; }
+
+.adm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.adm-cell { background: var(--card); border: 1px solid #24402d; border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.adm-cell-value { font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.adm-section h4 { color: var(--gold); font-size: 13px; margin: 2px 0 6px; }
+.adm-line {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  padding: 7px 2px; border-bottom: 1px solid #1f3727; font-size: 13px;
+}
+.adm-line:last-child { border-bottom: none; }
+.adm-line b { flex: none; font-variant-numeric: tabular-nums; }
+.adm-line small { font-size: 11px; }
+
+/* журнал */
+.adm-log {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid #24402d; border-radius: 12px; padding: 9px 10px;
+}
+.adm-section .adm-log { background: var(--bg2); margin-bottom: 6px; }
+.adm-log.undone { opacity: .55; }
+.adm-log-main { flex: 1; min-width: 0; }
+.adm-log-top { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+.adm-log-top b { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.adm-log-mode { flex: none; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 2px 6px; background: var(--bg2); color: var(--muted); }
+.adm-log-mode.add { color: #8fe0b0; }
+.adm-log-mode.sub { color: #f0a7ab; }
+.adm-log-mode.set { color: #eada8f; }
+.adm-log-ask { display: flex; gap: 4px; flex: none; }
+.chip.danger { background: #59262b; border-color: #7c3b41; color: #f2c7ca; }
+.adm-link {
+  border: none; background: none; color: var(--text); font: inherit; font-weight: 700; cursor: pointer; padding: 0;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;
+}
+
+@media (min-width: 600px) {
+  .adm-stats { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 900px) {
+  .admin.page { max-width: none; }
+  .adm-layout.wide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 440px); gap: 20px; align-items: start; }
+  .adm-side {
+    position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto;
+    background: rgba(15, 27, 20, .7); border: 1px solid #24402d; border-radius: 16px; padding: 14px;
+    overscroll-behavior: contain;
+  }
+  .adm-side .adm-card-head { padding-right: 0; }
+  .adm-side .adm-empty { border: none; padding: 60px 20px; }
+  .adm-row:hover { border-color: #3a6247; }
+}

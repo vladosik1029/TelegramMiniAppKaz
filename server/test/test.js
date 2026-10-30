@@ -111,6 +111,35 @@ check(r.status === 400 && r.data.error.includes('минус'), 'баланс н�
 r = await api('/admin/balance', { userId: 123456, mode: 'add', amount: 5 });
 check(r.status === 404, 'неизвестный юзер', r);
 
+// поиск, карточка, журнал и отмена
+r = await api('/admin/users?q=' + encodeURIComponent('@DEV_user'));
+check(r.data.users?.[0]?.id === devId && r.data.stats.players >= 1, 'admin поиск по @username', r);
+r = await api('/admin/users?q=' + encodeURIComponent('пользов'));
+check(r.data.users?.some(u => u.id === devId), 'admin поиск по имени (кириллица)', r);
+r = await api('/admin/users?q=' + String(devId).slice(0, 4) + '&sort=balance_asc&limit=1');
+check(r.data.users?.length === 1 && r.data.total >= 1, 'admin поиск по id + лимит', r);
+r = await api('/admin/balance', { userId: devId, mode: 'add', amount: 400, comment: 'тест' });
+check(r.data.before === 7600 && r.data.balance === 8000 && r.data.logId, 'admin add с журналом', r);
+const logId = r.data.logId;
+r = await api('/admin/users/' + devId);
+check(r.data.user?.balance === 8000 && r.data.log?.[0]?.comment === 'тест', 'admin карточка игрока', r);
+r = await api(`/admin/log/${logId}/undo`, {});
+check(r.data.balance === 7600, 'admin отмена действия', r);
+r = await api(`/admin/log/${logId}/undo`, {});
+check(r.status === 400, 'повторная отмена запрещена', r);
+r = await api('/admin/log');
+check(r.data.entries?.[0]?.mode === 'undo' && r.data.total >= 2, 'admin журнал', r);
+
+// не-админ (мок-игрок DEV_MODE) не видит админку
+for (const [path, body] of [['/admin/users'], ['/admin/users/' + devId], ['/admin/log'], ['/admin/balance', { userId: devId, mode: 'add', amount: 5 }]]) {
+  const res = await fetch(B + path, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'Content-Type': 'application/json', Authorization: 'tma dev:4242' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  check(res.status === 403, `не-админ: 403 на ${path}`, res.status);
+}
+
 // админ без прав: другой dev-юзер тоже админ по ADMIN_IDS; проверим 401 через
 // f太原ake заголовок initData, который не пройдёт проверку подписи (нет BOT_TOKEN)
 const res401 = await fetch(B + '/init', {
