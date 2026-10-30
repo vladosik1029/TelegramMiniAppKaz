@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { api, tg } from './api.js';
+import { motion, AnimatePresence } from 'framer-motion';
+import { api, tg, haptic } from './api.js';
 import Blackjack from './games/Blackjack.jsx';
 import Ochko from './games/Ochko.jsx';
 import Poker from './games/Poker.jsx';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
+import Rules from './components/Rules.jsx';
 
 const GAMES = [
   { id: 'blackjack', title: 'Blackjack', subtitle: '21 очко против дилера', icon: '🂡' },
@@ -32,7 +34,12 @@ export default function App() {
     const back = async () => { setScreenGame(null); await refresh(); };
     const gameProps = { profile, refresh, onExit: back };
     return (
-      <>
+      <motion.div
+        key={screenGame}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
         <div className="topbar">
           <button className="btn-ghost" onClick={back}>← Назад</button>
           <Coin balance={profile.balance} />
@@ -40,7 +47,7 @@ export default function App() {
         {screenGame === 'blackjack' && <Blackjack {...gameProps} />}
         {screenGame === 'ochko' && <Ochko {...gameProps} />}
         {screenGame === 'poker' && <Poker {...gameProps} />}
-      </>
+      </motion.div>
     );
   }
 
@@ -56,31 +63,43 @@ export default function App() {
         <Coin balance={balance} />
       </header>
 
-      {tab === 'games' && (
-        <main className="home">
-          <div className="game-grid">
-            {GAMES.map(g => (
-              <button key={g.id} className="game-card" onClick={() => setScreenGame(g.id)}>
-                <div className="game-icon">{g.icon}</div>
-                <div className="game-title">{g.title}</div>
-                <div className="game-sub">{g.subtitle}</div>
-              </button>
-            ))}
-          </div>
-          {balance <= 0 && (
-            <div className="notice">Фишки кончились! Чтобы продолжить игру, попроси админа начислить баланс.</div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={`tab-${tab}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.16, ease: 'easeOut' }}
+        >
+          {tab === 'games' && (
+            <main className="home">
+              <div className="game-grid">
+                {GAMES.map(g => (
+                  <button key={g.id} className="game-card" onClick={() => setScreenGame(g.id)}>
+                    <div className="game-icon">{g.icon}</div>
+                    <div className="game-title">{g.title}</div>
+                    <div className="game-sub">{g.subtitle}</div>
+                  </button>
+                ))}
+              </div>
+              {balance <= 0 && (
+                <div className="notice">Фишки кончились! Чтобы продолжить игру, попроси админа начислить баланс.</div>
+              )}
+            </main>
           )}
-        </main>
-      )}
 
-      {tab === 'wallet' && <Wallet profile={profile} refresh={refresh} />}
-      {tab === 'admin' && profile.isAdmin && <AdminPanel me={profile} refresh={refresh} />}
+          {tab === 'wallet' && <Wallet profile={profile} refresh={refresh} />}
+          {tab === 'rules' && <Rules />}
+          {tab === 'admin' && profile.isAdmin && <AdminPanel me={profile} refresh={refresh} />}
+        </motion.div>
+      </AnimatePresence>
 
       <nav className="bottombar">
-        <button className={tab === 'games' ? 'active' : ''} onClick={() => setTab('games')}>🎰 Игры</button>
-        <button className={tab === 'wallet' ? 'active' : ''} onClick={() => setTab('wallet')}>💰 Кошелёк</button>
+        <button className={tab === 'games' ? 'active' : ''} onClick={() => { haptic('light'); setTab('games'); }}>🎰 Игры</button>
+        <button className={tab === 'wallet' ? 'active' : ''} onClick={() => { haptic('light'); setTab('wallet'); }}>💰 Кошелёк</button>
+        <button className={tab === 'rules' ? 'active' : ''} onClick={() => { haptic('light'); setTab('rules'); }}>📖 Правила</button>
         {profile.isAdmin && (
-          <button className={tab === 'admin' ? 'active' : ''} onClick={() => setTab('admin')}>👑 Админ</button>
+          <button className={tab === 'admin' ? 'active' : ''} onClick={() => { haptic('light'); setTab('admin'); }}>👑 Админ</button>
         )}
       </nav>
     </>
