@@ -1,0 +1,15 @@
+{
+  "name": "telegram-miniapp-casino",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Telegram MiniApp: карточные игры (Blackjack, Очко, Покер) против бота + личный кабинет и админ-панель",
+  "scripts": {
+    "postinstall": "echo 'Устанавливай зависимости в server/ и client/ отдельно: npm run install:all'",
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build:client": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "setup:bot": "node server/src/bot.js"
+  }
+}

@@ -1,0 +1,91 @@
+import React, { useState } from 'react';
+import { api, haptic } from '../api.js';
+import { Hand, BetBar, ResultBanner } from '../components/ui.jsx';
+
+export default function Blackjack({ profile, refresh }) {
+  const [bet, setBet] = useState(50);
+  const [view, setView] = useState(null);     // state от сервера
+  const [balance, setBalance] = useState(profile.balance);
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const deal = async () => {
+    setBusy(true); setErr(''); setResult(null);
+    try {
+      const r = await api('/games/blackjack/start', { bet });
+      setBalance(r.balance);
+      setView(r.view);
+      if (r.finished) { setResult(r); if (r.outcome === 'win') haptic('success'); }
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const act = async (action) => {
+    setBusy(true); setErr('');
+    try {
+      const r = await api('/games/blackjack/action', { action });
+      setBalance(r.balance);
+      setView(r.view);
+      if (r.finished) {
+        setResult(r);
+        haptic(r.outcome === 'win' ? 'success' : r.outcome === 'lose' ? 'error' : 'light');
+        await refresh();
+      }
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const inRound = view && !result;
+
+  // У игрока сразу Blackjack → авто-stand
+  React.useEffect(() => {
+    if (view && !result && view.stage === 'done' && view.playerTotal === 21 && view.player.length === 2) {
+      act('stand');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view?.stage]);
+
+  return (
+    <main className="page game-screen">
+      <Hand title="🤖 Дилер" cards={view?.dealer ?? []} total={view?.dealerTotal} />
+      <Hand
+        title="🙋 Ты" cards={view?.player ?? []} total={view?.playerTotal}
+        label={view?.playerTotal === 21 && view.player.length === 2 && inRound ? 'Blackjack!' :
+               view?.playerTotal > 21 ? 'Перебор' : null}
+      />
+
+      {result && (
+        <ResultBanner
+          result={result}
+          extra={result.net < 0 ? `Ставка: ${(bet).toLocaleString('ru-RU')} 🪙` : null}
+        />
+      )}
+      {err && <div className="notice">⚠ {err}</div>}
+
+      {!inRound && !result && (
+        <BetBar balance={balance} bet={bet} setBet={setBet} disabled={busy} onDeal={deal} />
+      )}
+
+      {inRound && (
+        <div className="actions">
+          <button className="btn primary" disabled={busy} onClick={() => act('hit')}>Ещё (hit)</button>
+          <button className="btn primary" disabled={busy} onClick={() => act('stand')}>Хватит (stand)</button>
+          {view.canDouble && (
+            <button className="btn" disabled={busy} onClick={() => act('double')}>
+              Дабл ×2 ({(bet).toLocaleString('ru-RU')} 🪙)
+            </button>
+          )}
+        </div>
+      )}
+
+      {result && (
+        <div className="actions">
+          <button className="btn primary big" onClick={() => { setResult(null); setView(null); }}>
+            🔄 Новый раунд
+          </button>
+        </div>
+      )}
+    </main>
+  );
+}

@@ -1,0 +1,61 @@
+import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+export const db = new DatabaseSync(path.join(__dirname, '..', 'casino.db'));
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  username TEXT,
+  first_name TEXT,
+  balance INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS sessions (
+  user_id INTEGER NOT NULL,
+  game TEXT NOT NULL,
+  state TEXT NOT NULL,
+  bet INTEGER NOT NULL,
+  PRIMARY KEY (user_id, game)
+);
+CREATE TABLE IF NOT EXISTS history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  game TEXT NOT NULL,
+  bet INTEGER NOT NULL,
+  net INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_history_user ON history(user_id, id DESC);
+`);
+
+/** Транзакция: fn выполняется внутри BEGIN/COMMIT, при ошибке — ROLLBACK */
+export function tx(fn) {
+  db.exec('BEGIN');
+  try {
+    const result = fn();
+    db.exec('COMMIT');
+    return result;
+  } catch (e) {
+    try { db.exec('ROLLBACK'); } catch {}
+    throw e;
+  }
+}
+
+export const balanceOf = (userId) =>
+  db.prepare('SELECT balance FROM users WHERE id = ?').get(userId)?.balance ?? null;
+
+export function changeBalance(userId, delta) {
+  db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(delta, userId);
+  if ((balanceOf(userId)) < 0) throw new Error('BALANCE_TOO_LOW');
+}
+
+export const setBalance = (userId, value) =>
+  db.prepare('UPDATE users SET balance = ? WHERE id = ?').run(Math.max(0, Math.round(value)), userId);
+
+export function addHistory(userId, game, bet, net) {
+  db.prepare('INSERT INTO history (user_id, game, bet, net) VALUES (?, ?, ?, ?)')
+    .run(userId, game, bet, net);
+}
