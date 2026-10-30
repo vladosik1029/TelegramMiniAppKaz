@@ -6,6 +6,8 @@ import * as bj from './games/blackjack.js';
 import * as ochko from './games/ochko.js';
 import * as poker from './games/poker.js';
 import * as dice from './games/dice.js';
+import * as plinko from './games/plinko.js';
+import * as baccarat from './games/baccarat.js';
 import * as slots from './games/slots.js';
 import * as mines from './games/mines.js';
 import * as hilo from './games/hilo.js';
@@ -129,6 +131,48 @@ for (const o of [null, {}, { dir: 'under', target: 1 }, { dir: 'over', target: 9
 assert(badDice === 5, 'dice отклоняет плохие opts');
 
 rtp('Слоты', 40000, () => slots.start().returnMult);
+
+// плинко: точный средний возврат таблиц по биномиальному распределению + симуляция
+const binom = (n, k) => { let c = 1; for (let i = 1; i <= k; i++) c = c * (n - i + 1) / i; return c; };
+for (const [risk, t] of Object.entries(plinko.TABLES)) {
+  assert(t.length === plinko.ROWS + 1, `plinko ${risk}: ${plinko.ROWS + 1} лунок`);
+  const ev = t.reduce((s, m, k) => s + m * binom(plinko.ROWS, k) / 2 ** plinko.ROWS, 0);
+  assert(ev > 0.98 && ev < 0.995, `plinko ${risk}: возврат ${ev}`);
+  console.log(`Плинко (${risk}): точный возврат = ${ev.toFixed(4)}`);
+  rtp(`Плинко (${risk}), симуляция`, 40000, () => {
+    const r = plinko.start(10, { risk });
+    assert(r.view.path.length === plinko.ROWS && r.view.slot === r.view.path.reduce((a, b) => a + b, 0), 'plinko path');
+    return r.returnMult;
+  });
+}
+let badPlinko = 0;
+for (const o of [null, {}, { risk: 'x' }, { risk: 'toString' }]) { try { plinko.start(10, o); } catch { badPlinko++; } }
+assert(badPlinko === 4, 'plinko отклоняет плохие opts');
+
+// баккара: правила третьей карты, частоты исходов и возврат
+{
+  const t = baccarat.totalOf;
+  assert(t([{ r: 'K' }, { r: '9' }]) === 9 && t([{ r: '7' }, { r: '8' }]) === 5 && t([{ r: 'A' }, { r: '10' }]) === 1, 'baccarat: подсчёт очков');
+  assert(baccarat.bankerDraws(3, 8) === false && baccarat.bankerDraws(3, 9) === true && baccarat.bankerDraws(6, null) === false
+    && baccarat.bankerDraws(5, null) === true && baccarat.bankerDraws(6, 6) === true && baccarat.bankerDraws(4, 1) === false, 'baccarat: третья карта банкира');
+  const wins = { player: 0, banker: 0, tie: 0 };
+  for (const side of ['player', 'banker', 'tie']) {
+    rtp(`Баккара (${side})`, 60000, () => {
+      const r = baccarat.start(10, { side });
+      const v = r.view;
+      assert(v.player.length >= 2 && v.player.length <= 3 && v.banker.length >= 2 && v.banker.length <= 3, 'baccarat: 2–3 карты');
+      assert(v.order.length === v.player.length + v.banker.length, 'baccarat: порядок раздачи');
+      if (t(v.player.slice(0, 2)) >= 8 || t(v.banker.slice(0, 2)) >= 8) assert(v.order.length === 4, 'baccarat: натурал — без третьих карт');
+      wins[v.winner]++;
+      return r.returnMult;
+    });
+  }
+  const n = wins.player + wins.banker + wins.tie;
+  console.log(`Баккара: игрок ${(wins.player / n * 100).toFixed(1)}% / банкир ${(wins.banker / n * 100).toFixed(1)}% / ничья ${(wins.tie / n * 100).toFixed(1)}%`);
+  let badBac = 0;
+  for (const o of [null, {}, { side: 'x' }]) { try { baccarat.start(10, o); } catch { badBac++; } }
+  assert(badBac === 3, 'baccarat отклоняет плохие opts');
+}
 
 // сапёр: открываем 3 случайные клетки и забираем
 rtp('Сапёр (3 мины, 3 клетки)', 20000, () => {
