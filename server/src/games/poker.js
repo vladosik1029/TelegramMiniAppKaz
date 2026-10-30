@@ -18,7 +18,7 @@ const CAT_NAMES = {
 
 export { CAT_NAMES };
 
-const evaluate = (cards) => {
+export const evaluate = (cards) => {
   const vals = cards.map(c => VAL[c.r]).sort((a, b) => b - a);
   const suits = cards.map(c => c.s);
   const flush = suits.every(s => s === suits[0]);
@@ -57,7 +57,7 @@ const evaluate = (cards) => {
   return { cat, tiebreak, name: CAT_NAMES[cat] };
 };
 
-const cmpVec = (a, b) => {
+export const cmpVec = (a, b) => {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const d = (a[i] || 0) - (b[i] || 0);
     if (d) return d;

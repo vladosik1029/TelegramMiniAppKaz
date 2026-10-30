@@ -12,12 +12,16 @@ import crypto from 'node:crypto';
 import { db, tx, balanceOf, changeBalance, addHistory } from './db.js';
 import { env } from './telegram.js';
 import * as roulette from './games/roulette.js';
+import {
+  CARD_GAMES, bindCardTables, newRound, disposeRound, cardBet, cardClear, cardReady, cardAct,
+  cardLeave, cardPresence, cardView, stakeOf,
+} from './cardtables.js';
 
 export const ROOM_GAMES = {
   roulette: { title: 'Рулетка', icon: '🎡', ready: true },
-  blackjack: { title: 'Blackjack', icon: '🂡', ready: false },
-  ochko: { title: 'Очко', icon: '♠️', ready: false },
-  poker: { title: 'Покер', icon: '🂱', ready: false },
+  blackjack: { title: 'Blackjack', icon: '🂡', ready: true },
+  ochko: { title: 'Очко', icon: '♠️', ready: true },
+  poker: { title: 'Покер', icon: '🂱', ready: true },
 };
 
 export const MAX_PLAYERS = 8;
@@ -34,6 +38,10 @@ export const ROOM_ERRORS = {
   ROOM_BUSY: 'Колесо крутится — ставки закрыты',
   NO_BETS: 'Ещё никто не поставил',
   NO_MY_BETS: 'Сначала сделай ставку, потом жми «Готов»',
+  HAND_RUNNING: 'Идёт раздача — дождись следующей',
+  NOT_YOUR_TURN: 'Сейчас не твой ход',
+  CANT_RAISE: 'Повышать больше нельзя',
+  NEED_ANTE: 'В банке стола не хватает фишек на анте',
   BANK_LOW: 'В банке стола не хватает фишек',
   BAD_ROOM: 'Некорректные параметры стола',
   GAME_SOON: 'Эта игра для столов пока в разработке',
@@ -50,6 +58,14 @@ let notify = () => {};
 export function onRoomChange(fn) { notify = fn; }
 
 const fail = (code) => { throw new Error(code); };
+const isCards = (room) => CARD_GAMES.has(room.game);
+
+bindCardTables({
+  notify: (room, event) => notify(room, event),
+  isOnline: (room, userId) => !!online.get(room.id)?.get(userId),
+  isAlive: (room) => rooms.get(room.id) === room,
+  setBank: (room, m) => setBank(room, m),
+});
 
 function mustRoom(id) {
   const room = rooms.get(String(id));
@@ -99,6 +115,7 @@ export function createRoom(user, params = {}) {
     members: new Map([[user.id, { id: user.id, name: displayName(user), bank: buyIn, joinedAt: now }]]),
     bets: [], ready: new Set(), status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
   };
+  if (isCards(room)) room.round = newRound(room);
   rooms.set(id, room);
   return room;
 }
@@ -125,10 +142,15 @@ export function leaveRoom(userId, roomId) {
   const room = mustRoom(roomId);
   const m = mustMember(room, userId);
 
-  const myBets = room.bets.filter(b => b.userId === userId);
-  const cashout = m.bank + myBets.reduce((s, b) => s + b.amount, 0);
+  // карточный стол: ставка до раздачи возвращается; посреди раздачи рука
+  // доигрывается без игрока (выигрыш — сразу на баланс), в покере — фолд
+  const unplayed = isCards(room)
+    ? cardLeave(room, userId)
+    : room.bets.filter(b => b.userId === userId).reduce((s, b) => s + b.amount, 0);
+  const cashout = m.bank + unplayed;
+  const handRunning = isCards(room) && room.round.phase !== 'betting' && room.round.rows.has(userId);
   tx(() => {
-    db.prepare('DELETE FROM room_bets WHERE room_id = ? AND user_id = ?').run(room.id, userId);
+    if (!handRunning) db.prepare('DELETE FROM room_bets WHERE room_id = ? AND user_id = ?').run(room.id, userId);
     db.prepare('DELETE FROM room_members WHERE room_id = ? AND user_id = ?').run(room.id, userId);
     if (cashout > 0) changeBalance(userId, cashout);
   });
@@ -137,6 +159,7 @@ export function leaveRoom(userId, roomId) {
   room.ready.delete(userId);
 
   if (!room.members.size) {
+    if (isCards(room)) disposeRound(room);
     db.prepare('DELETE FROM rooms WHERE id = ?').run(room.id);
     rooms.delete(room.id);
     online.delete(room.id);
@@ -149,7 +172,8 @@ export function leaveRoom(userId, roomId) {
       db.prepare('UPDATE rooms SET host_id = ? WHERE id = ?').run(next.id, room.id);
     }
     notify(room, 'leave');
-    maybeSpin(room); // ушёл последний «неготовый» — можно крутить
+    if (isCards(room)) cardPresence(room);
+    else maybeSpin(room); // ушёл последний «неготовый» — можно крутить
   }
   return { cashout, balance: balanceOf(userId) };
 }
@@ -159,6 +183,7 @@ export function leaveRoom(userId, roomId) {
 export function placeBet(userId, roomId, bet = {}) {
   const room = mustRoom(roomId);
   const m = mustMember(room, userId);
+  if (isCards(room)) { cardBet(room, m, bet.amount); return room; }
   syncStatus(room);
   if (room.status !== 'open') fail('ROOM_BUSY');
 
@@ -192,6 +217,7 @@ export function placeBet(userId, roomId, bet = {}) {
 export function clearBets(userId, roomId) {
   const room = mustRoom(roomId);
   const m = mustMember(room, userId);
+  if (isCards(room)) { cardClear(room, m); return room; }
   syncStatus(room);
   if (room.status !== 'open') fail('ROOM_BUSY');
 
@@ -223,6 +249,7 @@ function mustBeReady(room) {
 export function setReady(userId, roomId, opts = {}) {
   const room = mustRoom(roomId);
   mustMember(room, userId);
+  if (isCards(room)) { cardReady(room, userId, opts.ready); return room; }
   syncStatus(room);
   if (room.status !== 'open') fail('ROOM_BUSY');
   if (opts.ready === false) {
@@ -233,6 +260,15 @@ export function setReady(userId, roomId, opts = {}) {
   }
   notify(room, 'ready');
   maybeSpin(room);
+  return room;
+}
+
+/** Ход в карточной игре: hit/stand/double, hit/stop, check/call/raise/fold, draw */
+export function playAction(userId, roomId, msg = {}) {
+  const room = mustRoom(roomId);
+  mustMember(room, userId);
+  if (!isCards(room)) fail('BAD_ACTION');
+  cardAct(room, userId, msg);
   return room;
 }
 
@@ -322,7 +358,8 @@ export function roomPreview(roomId, userId) {
 export function roomState(room, userId) {
   syncStatus(room);
   const staked = {};
-  for (const b of room.bets) staked[b.userId] = (staked[b.userId] ?? 0) + b.amount;
+  if (isCards(room)) for (const id of room.members.keys()) staked[id] = stakeOf(room, id);
+  else for (const b of room.bets) staked[b.userId] = (staked[b.userId] ?? 0) + b.amount;
   const on = online.get(room.id);
   const me = room.members.get(userId);
 
@@ -340,6 +377,7 @@ export function roomState(room, userId) {
     bets: room.bets.map(b => ({ userId: b.userId, type: b.type, value: b.value, amount: b.amount })),
     lastSpin: room.lastSpin,
     recent: room.recent,
+    round: isCards(room) ? cardView(room, userId) : null,
     you: { inRoom: !!me, isHost: room.hostId === userId, roomBalance: me?.bank ?? 0, ready: room.ready.has(userId) },
     invite: { link: inviteLink(room), code: `room_${room.id}` },
   };
@@ -361,7 +399,7 @@ export function socketDetached(roomId, userId) {
   const n = (map.get(userId) ?? 0) - 1;
   if (n > 0) map.set(userId, n); else map.delete(userId);
   const room = rooms.get(roomId);
-  if (room) { notify(room, 'presence'); maybeSpin(room); }
+  if (room) { notify(room, 'presence'); if (isCards(room)) cardPresence(room); else maybeSpin(room); }
 }
 
 // ─── старт сервера ───────────────────────────────────────────────────────────
@@ -371,8 +409,10 @@ export function bootRooms() {
   let refunded = 0;
   tx(() => {
     for (const b of db.prepare('SELECT * FROM room_bets').all()) {
-      db.prepare('UPDATE room_members SET bank = bank + ? WHERE room_id = ? AND user_id = ?')
+      const r = db.prepare('UPDATE room_members SET bank = bank + ? WHERE room_id = ? AND user_id = ?')
         .run(b.amount, b.room_id, b.user_id);
+      // игрок ушёл посреди раздачи — его несыгранная ставка идёт на баланс
+      if (!r.changes) changeBalance(b.user_id, b.amount);
       refunded++;
     }
     db.prepare('DELETE FROM room_bets').run();
@@ -389,6 +429,8 @@ export function bootRooms() {
       id: r.id, name: r.name, game: r.game, hostId: r.host_id, isPublic: !!r.is_public, buyIn: r.buy_in,
       members, bets: [], ready: new Set(), status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
     });
+    const room = rooms.get(r.id);
+    if (isCards(room)) room.round = newRound(room);
   }
   console.log(`Столы: поднято ${rooms.size}, возвращено ставок в банки: ${refunded}`);
 }

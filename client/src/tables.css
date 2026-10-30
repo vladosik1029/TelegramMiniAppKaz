@@ -202,3 +202,58 @@
 .room-result-slot .result-banner { margin-top: 0; position: absolute; left: 0; right: 0; top: 0; }
 .betbar .actions > * { min-height: 46px; }
 .room-leave { display: block; width: 100%; margin-top: 12px; }
+
+/* ─── карточный стол (Blackjack / Очко / Покер) ───────── */
+.ct-felt { padding: 12px 12px 14px; }
+.ct-status { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ct-phase { font-size: 12px; font-weight: 800; color: var(--gold); letter-spacing: .04em; text-transform: uppercase; }
+.ct-clock { font-size: 12px; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ct-clock.mine { color: var(--gold); }
+.ct-timer { height: 4px; border-radius: 999px; background: rgba(255, 255, 255, .08); overflow: hidden; margin: 6px 0 10px; }
+.ct-timer-fill {
+  height: 100%; background: linear-gradient(90deg, var(--gold2), var(--gold));
+  transform-origin: left center; animation-name: ctTimer; animation-timing-function: linear; animation-fill-mode: forwards;
+}
+@keyframes ctTimer { from { transform: scaleX(var(--from, 1)); } to { transform: scaleX(0); } }
+
+.ct-dealer, .ct-pot { text-align: center; margin-bottom: 10px; }
+.ct-dealer .ct-seat-head { justify-content: center; }
+.ct-dealer .ct-cards { justify-content: center; }
+.ct-pot { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px; border: 1px dashed rgba(230, 192, 101, .3); border-radius: 12px; }
+.ct-pot b { font-size: 22px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.ct-pot small { color: var(--muted); font-size: 11px; }
+.ct-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 14px 0; width: 100%; }
+
+.ct-seats { display: flex; flex-direction: column; gap: 8px; }
+.ct-seat {
+  border: 1px solid #2b4a35; border-radius: 12px; padding: 8px 10px;
+  background: rgba(0, 0, 0, .18); transition: border-color .2s, box-shadow .2s;
+}
+.ct-seat.me { border-color: rgba(230, 192, 101, .45); }
+.ct-seat.active { border-color: var(--gold); box-shadow: 0 0 14px rgba(230, 192, 101, .3); }
+.ct-seat.folded { opacity: .55; }
+.ct-seat-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; min-width: 0; }
+.ct-name { font-weight: 800; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ct-total { font-weight: 900; color: var(--gold); }
+.ct-hand { font-size: 11px; font-weight: 700; color: #f0d9a1; }
+.ct-tag { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, .08); color: var(--muted); }
+.ct-tag.bj, .ct-tag.pan, .ct-tag.ochko { background: var(--gold2); color: #1b1407; }
+.ct-tag.bust { background: rgba(192, 57, 43, .25); color: #f0a7ab; }
+.ct-stake { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+.ct-cards { min-height: 0; gap: 6px; }
+.ct-cards.small { gap: 4px; }
+.ct-seat.me .ct-cards { gap: 5px; flex-wrap: nowrap; }
+.ct-seat.me .card { width: 52px; height: 74px; }
+.ct-seat.me .card-suit-big { font-size: 28px; }
+.ct-cards.small .card { width: 40px; height: 57px; border-radius: 7px; }
+.ct-cards.small .card-rank { font-size: 12px; top: 2px; left: 4px; }
+.ct-cards.small .card-suit { display: none; }
+.ct-cards.small .card-suit-big { font-size: 20px; right: 4px; }
+.ct-cards.small .card-back-pattern { inset: 4px; }
+.ct-result { margin-top: 6px; font-size: 12px; font-weight: 800; }
+.ct-result.win { color: var(--green); }
+.ct-result.lose { color: #f0a7ab; }
+.ct-result.push { color: #eada8f; }
+.ct-felt .result-banner { margin-top: 10px; }
+.ct-panel .actions { flex-wrap: nowrap; }
+.ct-panel .actions .btn { flex: 1; min-width: 0; padding-left: 6px; padding-right: 6px; }

@@ -13,7 +13,7 @@ import * as mines from './games/mines.js';
 import * as hilo from './games/hilo.js';
 import {
   ROOM_GAMES, ROOM_ERRORS, MAX_PLAYERS, MIN_BUYIN, MAX_BUYIN,
-  createRoom, joinRoom, leaveRoom, placeBet, clearBets, setReady,
+  createRoom, joinRoom, leaveRoom, placeBet, clearBets, setReady, playAction,
   getRoom, listRooms, roomPreview, roomState,
 } from './rooms.js';
 
@@ -255,6 +255,7 @@ const roomAction = (fn) => (req, res) => {
 api.post('/rooms/:id/bet', roomAction(placeBet));
 api.post('/rooms/:id/clear', roomAction(clearBets));
 api.post('/rooms/:id/ready', roomAction(setReady));
+api.post('/rooms/:id/act', roomAction(playAction));
 
 // ─── админ: управление балансами ─────────────────────────────────────────────
 api.use('/admin', (req, res, next) => {

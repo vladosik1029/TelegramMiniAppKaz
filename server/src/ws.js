@@ -1,7 +1,7 @@
 // ─── WebSocket-канал столов ──────────────────────────────────────────────────
 // Подключение: wss://<host>/ws?t=<initData> (в DEV_MODE: пусто = dev-игрок,
 // либо «dev:<id>» — мок-игрок для тестов с двумя клиентами).
-// Клиент → сервер: { op: 'sub'|'bet'|'clear'|'ready'|'leave'|'refresh', roomId?, ...; rid? }
+// Клиент → сервер: { op: 'sub'|'bet'|'clear'|'ready'|'act'|'leave'|'refresh', roomId?, ...; rid? }
 // Сервер → клиент: { type: 'room', room } — персональное состояние стола после
 // каждого изменения; { type: 'left', roomId, cashout, balance }; { type: 'closed', roomId };
 // { type: 'error', error, rid }; { type: 'ok', rid }.
@@ -9,7 +9,7 @@
 import { WebSocketServer } from 'ws';
 import { userFromInitData, ensureUser, errorText } from './routes.js';
 import {
-  getRoom, roomState, placeBet, clearBets, setReady, leaveRoom,
+  getRoom, roomState, placeBet, clearBets, setReady, playAction, leaveRoom,
   socketAttached, socketDetached, onRoomChange,
 } from './rooms.js';
 
@@ -84,6 +84,7 @@ export function attachWs(server) {
           case 'bet': placeBet(uid, ws.roomId, msg); break;
           case 'clear': clearBets(uid, ws.roomId); break;
           case 'ready': setReady(uid, ws.roomId, msg); break;
+          case 'act': playAction(uid, ws.roomId, msg); break;
           case 'leave': {
             const roomId = ws.roomId;
             unsub(ws);

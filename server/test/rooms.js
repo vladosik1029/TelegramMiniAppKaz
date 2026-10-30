@@ -59,7 +59,7 @@ check(r.status === 200 && r.data.room.you.isHost && r.data.room.you.roomBalance 
 check(r.data.balance === bal0 - 200, 'бай-ин списан с основного баланса', r.data);
 const roomId = r.data.room.id;
 check(r.data.room.invite.link.endsWith(`startapp=room_${roomId}`), 'ссылка-приглашение', r.data.room.invite);
-check((await api('/rooms', { game: 'poker', buyIn: 100 })).status === 400, 'покер для столов — «скоро»');
+check((await api('/rooms', { game: 'chess', buyIn: 100 })).status === 400, 'неизвестная игра отклонена');
 check((await api('/rooms', { game: 'roulette', buyIn: 1 })).status === 400, 'бай-ин ниже минимума отклонён');
 
 // приватный стол не светится в публичном списке у чужих, но виден владельцу
