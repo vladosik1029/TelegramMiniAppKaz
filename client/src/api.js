@@ -78,8 +78,20 @@ export function wsClose() {
   sock = null;
 }
 
+/** Случайная hex-строка из криптостойкого генератора браузера */
+export function randomHex(bytes = 16) {
+  const a = crypto.getRandomValues(new Uint8Array(bytes));
+  return [...a].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Provably Fair: к «Готов» за столом и ставке в Ракете браузер прикладывает
+// свежее случайное число — оно входит в client seed общего раунда, хэш сида
+// которого сервер показал ещё до ставок.
+const WITH_ENTROPY = new Set(['ready', 'crash_bet']);
+
 /** Отправка; пока соединение не открыто — копим (не больше 20 сообщений) */
 export function wsSend(msg) {
+  if (WITH_ENTROPY.has(msg?.op) && msg.ready !== false) msg = { ...msg, entropy: randomHex() };
   const raw = JSON.stringify(msg);
   if (sock?.readyState === WebSocket.OPEN) sock.send(raw);
   else if (queue.length < 20) queue.push(raw);

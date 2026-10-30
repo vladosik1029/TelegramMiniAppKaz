@@ -173,7 +173,7 @@ function crash() {
       openRound({ ...round, userId: uid, summary: `×${state.point.toFixed(2)} · ${net >= 0 ? '+' : ''}${net}` });
     }
   });
-  state.lastFair = { idx: f.idx, hash: f.hash, seed: f.seed, clientSeed: f.clientSeed, point: state.point };
+  state.lastFair = { idx: f.idx, hash: f.hash, seed: f.seed, clientSeed: f.clientSeed, point: state.point, commitment: f.commitment };
   state.recent = [state.point, ...state.recent].slice(0, HISTORY);
   notify('crashed');
 }
