@@ -20,7 +20,7 @@ export default function Wallet({ profile, refresh }) {
   const totalNet = history.reduce((s, h) => s + h.net, 0);
 
   return (
-    <main className="page">
+    <main className="page wallet">
       <div className="wallet-card">
         <div className="wallet-title">Мой баланс</div>
         <div className="wallet-balance">{profile.balance.toLocaleString('ru-RU')} 🪙</div>

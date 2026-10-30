@@ -1,11 +1,12 @@
-// Вкладка «📖 Правила» — понятные тексты по трём играм.
+// Вкладка «📖 Правила» — понятные тексты по каждой игре. RulesCard же открывается
+// кнопкой «Правила» прямо из экрана игры.
 // Выплаты описаны как «сколько вернёшь всего» (ставка включена), ровно как считает сервер:
 // ×2 = ставка вернулась + столько же сверху; ×1 = ничья (возврат); ×0 = проигрыш.
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const GAMES = [
+export const RULES = [
   {
     id: 'blackjack',
     name: 'Blackjack',
@@ -238,7 +239,8 @@ const GAMES = [
       ['Высокий риск', '×0,2 – ×170', 'центр ×0,2, края ×170'],
     ],
     tips: 'Средний возврат у всех трёх рисков одинаковый, около 99%. Высокий риск — это редкие большие выигрыши и частые потери.',
-  },  {
+  },
+  {
     id: 'baccarat',
     name: 'Баккара',
     short: 'пунто-банко',
@@ -259,16 +261,39 @@ const GAMES = [
       ['Ничья при ставке на Игрока/Банкира', '×1', 'ставка возвращается'],
     ],
     tips: 'Самая выгодная ставка — на Банкира (возврат ≈ 98,9%), на Игрока ≈ 98,8%. Ничья выпадает примерно раз в 10 раздач и в среднем возвращает только ≈ 85%.',
+  },  {
+    id: 'crash',
+    name: 'Ракета',
+    short: 'онлайн',
+    icon: '🚀',
+    goal: 'Ракета взлетает, множитель растёт от ×1.00. Забери ставку, пока она не взорвалась: получишь ставку × множитель. Не успел — ставка сгорела.',
+    cards: 'Раунд общий для всех, кто сейчас в игре: видно, кто сколько поставил и на каком множителе забрал. Где взорвётся ракета, решается в момент взлёта и до взрыва никто не знает.',
+    steps: [
+      '8 секунд на ставку перед взлётом. Ставку можно отменить до взлёта.',
+      'Ракета летит — жми «Забрать», когда захочешь.',
+      'Или включи автозабор: ставка заберётся сама на заданном множителе.',
+      'После взрыва — 3 секунды паузы и новый раунд.',
+    ],
+    actions: [
+      ['« Забрать »', 'выплата = ставка × текущий множитель.'],
+      ['« Автозабор »', 'от ×1.01; срабатывает на сервере, даже если связь подвисла.'],
+    ],
+    payouts: [
+      ['Забрал на ×1.50', '×1,5', 'поставил 100 → получил 150'],
+      ['Забрал на ×10', '×10', 'поставил 100 → получил 1 000'],
+      ['Не успел до взрыва', '×0', 'ставка сгорает'],
+    ],
+    tips: 'Примерно в половине раундов ракета не долетает до ×2, а иногда взрывается сразу на ×1.00. Автозабор на небольшом множителе — спокойная игра, ожидание больших иксов — рискованная.',
   },
 ];
 
-export default function Rules() {
-  const [game, setGame] = useState(GAMES[0].id);  const g = GAMES.find(x => x.id === game);
+export default function Rules({ initial }) {
+  const [game, setGame] = useState(initial ?? RULES[0].id);
 
   return (
     <div className="page rules">
       <div className="rules-controls">
-        {GAMES.map(x => (
+        {RULES.map(x => (
           <button key={x.id} className={`rules-pill ${x.id === game ? 'active' : ''}`}
                   onClick={() => setGame(x.id)}>
             <span className="rules-pill-icon">{x.icon}</span>{x.name}
@@ -284,54 +309,63 @@ export default function Rules() {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
         >
-          <div className="rules-card">
-            <div className="rules-title">{g.icon} {g.name}<div className="rules-sub">{g.short}</div></div>
-            <div className="rules-block">
-              <div className="rules-label">🎯 Цель</div>
-              <p>{g.goal}</p>
-            </div>
-            <div className="rules-block">
-              <div className="rules-label">🃏 Карты</div>
-              <p>{g.cards}</p>
-            </div>
-            <div className="rules-block">
-              <div className="rules-label">🧭 Как идёт раунд</div>
-              <ol className="rules-steps">
-                {g.steps.map((s, i) => <li key={i}>{s}</li>)}
-              </ol>
-            </div>
-            <div className="rules-block">
-              <div className="rules-label">🎮 Что нажимать</div>
-              <div className="rules-actions">
-                {g.actions.map(([a, d], i) => (
-                  <div key={i} className="rules-action"><b>{a}</b> — {d}</div>
-                ))}
-              </div>
-            </div>
-            <div className="rules-block">
-              <div className="rules-label">💰 Сколько вернёшь</div>
-              <div className="payout-table">
-                {g.payouts.map(([name, mult, example], i) => (
-                  <div key={i} className="payout-row">
-                    <div className="payout-name">{name}</div>
-                    <div className="payout-right">
-                      <span className={`payout-mult ${i < g.payouts.length - 1 ? '' : 'bad'}`}>{mult}</span>
-                      <span className="payout-example">{example}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="payout-note">×N — сколько вернёшь всего на каждую поставленную 1 🪙 (×2 — вернул двое, ×1 — ничья).</div>
-            </div>
-            {g.tips && (
-              <div className="rules-block rules-tip">
-                <div className="rules-label">💡 Совет</div>
-                <p>{g.tips}</p>
-              </div>
-            )}
-          </div>
+          <RulesCard id={game} />
         </motion.div>
       </AnimatePresence>
+    </div>
+  );
+}
+
+/** Карточка правил одной игры */
+export function RulesCard({ id }) {
+  const g = RULES.find(x => x.id === id);
+  if (!g) return null;
+  return (
+    <div className="rules-card">
+      <div className="rules-title">{g.icon} {g.name}<div className="rules-sub">{g.short}</div></div>
+      <div className="rules-block">
+        <div className="rules-label">🎯 Цель</div>
+        <p>{g.goal}</p>
+      </div>
+      <div className="rules-block">
+        <div className="rules-label">🃏 Карты</div>
+        <p>{g.cards}</p>
+      </div>
+      <div className="rules-block">
+        <div className="rules-label">🧭 Как идёт раунд</div>
+        <ol className="rules-steps">
+          {g.steps.map((s, i) => <li key={i}>{s}</li>)}
+        </ol>
+      </div>
+      <div className="rules-block">
+        <div className="rules-label">🎮 Что нажимать</div>
+        <div className="rules-actions">
+          {g.actions.map(([a, d], i) => (
+            <div key={i} className="rules-action"><b>{a}</b> — {d}</div>
+          ))}
+        </div>
+      </div>
+      <div className="rules-block">
+        <div className="rules-label">💰 Сколько вернёшь</div>
+        <div className="payout-table">
+          {g.payouts.map(([name, mult, example], i) => (
+            <div key={i} className="payout-row">
+              <div className="payout-name">{name}</div>
+              <div className="payout-right">
+                <span className={`payout-mult ${mult === '×0' ? 'bad' : ''}`}>{mult}</span>
+                <span className="payout-example">{example}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="payout-note">×N — сколько вернёшь всего на каждую поставленную 1 🪙 (×2 — вернул двое, ×1 — ничья).</div>
+      </div>
+      {g.tips && (
+        <div className="rules-block rules-tip">
+          <div className="rules-label">💡 Совет</div>
+          <p>{g.tips}</p>
+        </div>
+      )}
     </div>
   );
 }

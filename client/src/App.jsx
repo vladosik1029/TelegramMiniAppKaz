@@ -15,7 +15,7 @@ import Baccarat from './games/Baccarat.jsx';
 import { AnimatedNumber } from './components/fx.jsx';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
-import Rules from './components/Rules.jsx';
+import Rules, { RulesCard } from './components/Rules.jsx';
 import Tables from './components/Tables.jsx';
 
 const GAMES = [
@@ -24,7 +24,7 @@ const GAMES = [
   { id: 'poker', title: 'Покер', subtitle: 'Пятикарточный дро-покер', icon: '🂱', group: 'cards', accent: 'sapphire' },
   { id: 'baccarat', title: 'Баккара', subtitle: 'Игрок, Банкир или Ничья', icon: '🎴', group: 'cards', accent: 'violet' },
   { id: 'hilo', title: 'Выше / Ниже', subtitle: 'Угадай следующую карту', icon: '🃏', group: 'cards', accent: 'amber' },
-  { id: 'crash', title: 'Ракета', subtitle: 'Забери до взрыва · онлайн', icon: '🚀', group: 'quick', accent: 'amber' },
+  { id: 'crash', title: 'Ракета', subtitle: 'Забери до взрыва', icon: '🚀', group: 'online', accent: 'amber', live: true },
   { id: 'plinko', title: 'Плинко', subtitle: 'Шарик через колышки, до ×170', icon: '🟡', group: 'quick', accent: 'violet' },
   { id: 'roulette', title: 'Рулетка', subtitle: 'Европейская, 37 лунок', icon: '🎡', group: 'quick', accent: 'ruby' },
   { id: 'slots', title: 'Слоты', subtitle: '3 барабана, до ×200', icon: '🎰', group: 'quick', accent: 'violet' },
@@ -41,8 +41,9 @@ const TABS = [
 ];
 
 const GROUPS = [
-  { id: 'cards', title: '🃏 Карточные' },
-  { id: 'quick', title: '⚡ Быстрые' },
+  { id: 'online', title: '🔥 Онлайн с другими игроками' },
+  { id: 'cards', title: '🃏 Карточные', note: 'против крупье' },
+  { id: 'quick', title: '⚡ Быстрые', note: 'раунд за пару секунд' },
 ];
 
 const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Roulette, slots: Slots, mines: Mines, hilo: HiLo, dice: Dice, crash: Crash, plinko: Plinko, baccarat: Baccarat };
@@ -53,6 +54,7 @@ export default function App() {
   const [inviteRoomId, setInviteRoomId] = useState(() => (/^room_[\w-]+$/.test(startParam) ? startParam.slice(5) : null));
   const [tab, setTab] = useState(inviteRoomId ? 'tables' : 'games'); // games | tables | wallet | rules | admin
   const [screenGame, setScreenGame] = useState(null);
+  const [showRules, setShowRules] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
@@ -66,8 +68,9 @@ export default function App() {
   if (!profile) return <div className="app-loading">Загрузка…</div>;
 
   if (screenGame) {
-    const back = async () => { setScreenGame(null); await refresh(); };
+    const back = async () => { setShowRules(false); setScreenGame(null); await refresh(); };
     const gameProps = { profile, refresh, onExit: back };
+    const meta = GAMES.find(g => g.id === screenGame);
     return (
       <motion.div
         key={screenGame}
@@ -75,11 +78,20 @@ export default function App() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
       >
-        <div className="topbar">
-          <button className="btn-ghost" onClick={back}>← Назад</button>
+        <div className="topbar game-topbar">
+          <button className="icon-btn" onClick={back} aria-label="Назад">←</button>
+          <div className="game-topbar-title">
+            <span>{meta?.icon}</span> {meta?.title}
+          </div>
+          <button className="icon-btn rules-btn" aria-label="Правила" onClick={() => { haptic('light'); setShowRules(true); }}>
+            📖<span className="rules-btn-label">Правила</span>
+          </button>
           <Coin balance={profile.balance} />
         </div>
         {SCREENS[screenGame] && React.createElement(SCREENS[screenGame], gameProps)}
+        <Sheet open={showRules} onClose={() => setShowRules(false)}>
+          <RulesCard id={screenGame} />
+        </Sheet>
       </motion.div>
     );
   }
@@ -108,22 +120,15 @@ export default function App() {
             <main className="home">
               {GROUPS.map(gr => (
                 <section key={gr.id}>
-                  <h3 className="section-title">{gr.title}</h3>
+                  <h3 className="section-title">{gr.title}{gr.note && <small>{gr.note}</small>}</h3>
                   <motion.div className="game-grid" variants={gridStagger} initial="hidden" animate="show">
                     {GAMES.filter(g => g.group === gr.id).map(g => (
-                      <motion.button
-                        key={g.id}
-                        variants={gridItem}
-                        whileTap={{ scale: .96 }}
-                        className={`game-card accent-${g.accent}`}
-                        onClick={() => { haptic('light'); setScreenGame(g.id); }}
-                      >
-                        <div className="game-icon">{g.icon}</div>
-                        <div className="game-title">{g.title}</div>
-                        <div className="game-sub">{g.subtitle}</div>
-                        <span className="game-shine" aria-hidden />
-                      </motion.button>
+                      <GameTile key={g.id} g={g} onClick={() => { haptic('light'); setScreenGame(g.id); }} />
                     ))}
+                    {gr.id === 'online' && (
+                      <GameTile g={{ icon: '👥', title: 'Столы с друзьями', subtitle: 'Рулетка, блэкджек, покер, дурак', accent: 'emerald' }}
+                        onClick={() => { haptic('light'); setTab('tables'); }} />
+                    )}
                   </motion.div>
                 </section>
               ))}
@@ -151,6 +156,44 @@ export default function App() {
         ))}
       </nav>
     </>
+  );
+}
+
+function GameTile({ g, onClick }) {
+  return (
+    <motion.button variants={gridItem} whileTap={{ scale: .96 }} className={`game-card accent-${g.accent}`} onClick={onClick}>
+      <div className="game-icon">{g.icon}</div>
+      <div className="game-text">
+        <div className="game-title">{g.title}{g.live && <span className="live-dot">онлайн</span>}</div>
+        <div className="game-sub">{g.subtitle}</div>
+      </div>
+      <span className="game-shine" aria-hidden />
+    </motion.button>
+  );
+}
+
+/** Нижняя шторка (на ПК — окно по центру), закрывается по фону и Esc */
+function Sheet({ open, onClose, children }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div className="sheet-backdrop" onClick={onClose}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div className="sheet" onClick={(e) => e.stopPropagation()}
+            initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
+            <button className="sheet-close" onClick={onClose} aria-label="Закрыть">✕</button>
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

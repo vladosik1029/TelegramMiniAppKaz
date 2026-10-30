@@ -100,7 +100,7 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div className="game-screen room-screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {head}
 
       <div className="table-felt ct-felt">
@@ -383,7 +383,7 @@ function DurakHand({ r, myTurn, onPlay }) {
   return (
     <div className="dk-hand-wrap">
       <div className="dk-hand-title">{role} · {d.hand.length} карт</div>
-      <div className={`dk-hand ${d.hand.length > 6 ? 'many' : ''}`}>
+      <div className={`dk-hand ${d.hand.length > 6 ? 'many' : ''}`} style={{ '--n': d.hand.length }}>
         {d.hand.map((c, i) => {
           const ok = myTurn && d.playable.includes(i);
           return (
