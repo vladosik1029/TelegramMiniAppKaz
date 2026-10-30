@@ -365,7 +365,9 @@ function RoomScreen({ roomId, profile, onExit }) {
   const before = spinning && frozen.current;
   const bankOf = (p) => (before ? before.players.find(x => x.id === p.id)?.bank ?? p.bank : p.bank);
   const you = before ? { ...room.you, roomBalance: before.you.roomBalance } : room.you;
-  const host = room.players.find(p => p.isHost);
+  // «Готов» ждём от игроков онлайн, у которых есть фишки или ставки (как на сервере)
+  const waitFor = room.players.filter(p => p.online && (p.bank > 0 || p.bet > 0));
+  const readyCount = waitFor.filter(p => p.ready).length;
   const canBet = connected && !spinning && you.roomBalance >= 1;
   const myResult = shownSpin?.results?.[profile.id];
   const totalOnTable = room.players.reduce((s, p) => s + p.bet, 0);
@@ -450,6 +452,7 @@ function RoomScreen({ roomId, profile, onExit }) {
               {before && (before.players.find(x => x.id === p.id)?.bet ?? 0) > 0 &&
                 <span className="player-bet">ставка {fmt(before.players.find(x => x.id === p.id).bet)}</span>}
               {!before && p.bet > 0 && <span className="player-bet">ставка {fmt(p.bet)}</span>}
+              {!spinning && p.ready && <span className="player-ready">✓ готов</span>}
               {r && !spinning && <span className={`player-net ${r.net > 0 ? 'pos' : r.net < 0 ? 'neg' : ''}`}>{r.net > 0 ? '+' : ''}{fmt(r.net)}</span>}
               <span className="player-bank"><AnimatedNumber value={bankOf(p)} /> 🪙</span>
             </div>
@@ -501,15 +504,21 @@ function RoomScreen({ roomId, profile, onExit }) {
         <div className="actions">
           <button className="btn small" disabled={!canBet || !myBets.length}
             onClick={() => { haptic('light'); wsSend({ op: 'clear' }); }}>↩ Снять ставки</button>
-          {you.isHost ? (
-            <motion.button whileTap={{ scale: .96 }} className="btn gold" disabled={!connected || spinning || !room.bets.length}
-              onClick={() => { setErr(''); wsSend({ op: 'spin' }); }}>
-              {spinning ? 'Колесо крутится…' : room.bets.length ? 'Крутить 🎡' : 'Ждём ставок'}
-            </motion.button>
+          {spinning ? (
+            <div className="room-wait">Колесо крутится…</div>
           ) : (
-            <div className="room-wait">{spinning ? 'Колесо крутится…' : `Крутит 👑 ${host?.name ?? 'хост'}`}</div>
+            <motion.button whileTap={{ scale: .96 }} className={`btn ${you.ready ? 'ready-on' : 'gold'}`}
+              disabled={!connected || (!you.ready && !myBets.length)}
+              onClick={() => { haptic('light'); setErr(''); wsSend({ op: 'ready', ready: !you.ready }); }}>
+              {you.ready ? '✓ Готов · отменить' : myBets.length ? 'Готов ✋' : 'Сделай ставку'}
+            </motion.button>
           )}
         </div>
+        {!spinning && (
+          <div className="hint ready-hint">
+            Готовы {readyCount} из {waitFor.length}. Колесо закрутится, когда все сделают ставки и нажмут «Готов».
+          </div>
+        )}
       </div>
 
       <button className="btn danger big room-leave" onClick={leave}>

@@ -31,9 +31,9 @@ export const ROOM_ERRORS = {
   ROOM_NOT_FOUND: 'Стол не найден или уже закрыт',
   ROOM_FULL: 'За столом нет свободных мест',
   NOT_IN_ROOM: 'Ты не сидишь за этим столом',
-  NOT_HOST: 'Это может сделать только создатель стола',
   ROOM_BUSY: 'Колесо крутится — ставки закрыты',
   NO_BETS: 'Ещё никто не поставил',
+  NO_MY_BETS: 'Сначала сделай ставку, потом жми «Готов»',
   BANK_LOW: 'В банке стола не хватает фишек',
   BAD_ROOM: 'Некорректные параметры стола',
   GAME_SOON: 'Эта игра для столов пока в разработке',
@@ -97,7 +97,7 @@ export function createRoom(user, params = {}) {
   const room = {
     id, name, game, hostId: user.id, isPublic, buyIn,
     members: new Map([[user.id, { id: user.id, name: displayName(user), bank: buyIn, joinedAt: now }]]),
-    bets: [], status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
+    bets: [], ready: new Set(), status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
   };
   rooms.set(id, room);
   return room;
@@ -134,6 +134,7 @@ export function leaveRoom(userId, roomId) {
   });
   room.bets = room.bets.filter(b => b.userId !== userId);
   room.members.delete(userId);
+  room.ready.delete(userId);
 
   if (!room.members.size) {
     db.prepare('DELETE FROM rooms WHERE id = ?').run(room.id);
@@ -148,6 +149,7 @@ export function leaveRoom(userId, roomId) {
       db.prepare('UPDATE rooms SET host_id = ? WHERE id = ?').run(next.id, room.id);
     }
     notify(room, 'leave');
+    maybeSpin(room); // ушёл последний «неготовый» — можно крутить
   }
   return { cashout, balance: balanceOf(userId) };
 }
@@ -181,6 +183,7 @@ export function placeBet(userId, roomId, bet = {}) {
       room.bets.push({ id: Number(r.lastInsertRowid), userId, type, value, amount });
     }
   });
+  room.ready.delete(userId); // ставки изменились — «Готов» нужно нажать заново
   notify(room, 'bet');
   return room;
 }
@@ -200,19 +203,48 @@ export function clearBets(userId, roomId) {
     db.prepare('DELETE FROM room_bets WHERE room_id = ? AND user_id = ?').run(room.id, userId);
   });
   room.bets = room.bets.filter(b => b.userId !== userId);
+  room.ready.delete(userId);
   notify(room, 'bet');
   return room;
 }
 
-/** Хост запускает колесо: один исход на всех, выплаты сразу в банки стола */
-export function spinRoulette(userId, roomId) {
+/**
+ * Кто должен нажать «Готов», чтобы колесо закрутилось: игроки онлайн, у которых
+ * есть чем играть (фишки в банке или ставки). Офлайн-игроки и игроки с пустым
+ * банком раунд не держат; ставки офлайн-игрока при этом всё равно играют.
+ */
+function mustBeReady(room) {
+  const on = online.get(room.id);
+  const staked = new Set(room.bets.map(b => b.userId));
+  return [...room.members.values()].filter(m => on?.get(m.id) && (m.bank > 0 || staked.has(m.id)));
+}
+
+/** Игрок жмёт «Готов» (или отменяет): когда готовы все — колесо крутится само */
+export function setReady(userId, roomId, opts = {}) {
   const room = mustRoom(roomId);
   mustMember(room, userId);
-  if (room.hostId !== userId) fail('NOT_HOST');
   syncStatus(room);
   if (room.status !== 'open') fail('ROOM_BUSY');
-  if (!room.bets.length) fail('NO_BETS');
+  if (opts.ready === false) {
+    room.ready.delete(userId);
+  } else {
+    if (!room.bets.some(b => b.userId === userId)) fail('NO_MY_BETS');
+    room.ready.add(userId);
+  }
+  notify(room, 'ready');
+  maybeSpin(room);
+  return room;
+}
 
+function maybeSpin(room) {
+  if (rooms.get(room.id) !== room) return;
+  syncStatus(room);
+  if (room.status !== 'open' || !room.bets.length || !room.ready.size) return;
+  if (mustBeReady(room).every(m => room.ready.has(m.id))) spinRoulette(room);
+}
+
+/** Колесо: один исход на всех, выплаты сразу в банки стола */
+function spinRoulette(room) {
   const idx = crypto.randomInt(0, roulette.ORDER.length);
   const number = roulette.ORDER[idx];
 
@@ -241,6 +273,7 @@ export function spinRoulette(userId, roomId) {
     results,
   };
   room.bets = [];
+  room.ready.clear();
   room.recent = [number, ...room.recent].slice(0, RECENT_NUMBERS);
   room.status = 'spinning';
   room.spinUntil = Date.now() + SPIN_MS;
@@ -302,12 +335,12 @@ export function roomState(room, userId) {
       .sort((a, b) => a.joinedAt - b.joinedAt)
       .map(m => ({
         id: m.id, name: m.name, bank: m.bank, bet: staked[m.id] ?? 0,
-        online: !!on?.get(m.id), isHost: m.id === room.hostId,
+        online: !!on?.get(m.id), isHost: m.id === room.hostId, ready: room.ready.has(m.id),
       })),
     bets: room.bets.map(b => ({ userId: b.userId, type: b.type, value: b.value, amount: b.amount })),
     lastSpin: room.lastSpin,
     recent: room.recent,
-    you: { inRoom: !!me, isHost: room.hostId === userId, roomBalance: me?.bank ?? 0 },
+    you: { inRoom: !!me, isHost: room.hostId === userId, roomBalance: me?.bank ?? 0, ready: room.ready.has(userId) },
     invite: { link: inviteLink(room), code: `room_${room.id}` },
   };
 }
@@ -327,7 +360,8 @@ export function socketDetached(roomId, userId) {
   if (!map) return;
   const n = (map.get(userId) ?? 0) - 1;
   if (n > 0) map.set(userId, n); else map.delete(userId);
-  if (rooms.has(roomId)) notify(rooms.get(roomId), 'presence');
+  const room = rooms.get(roomId);
+  if (room) { notify(room, 'presence'); maybeSpin(room); }
 }
 
 // ─── старт сервера ───────────────────────────────────────────────────────────
@@ -353,7 +387,7 @@ export function bootRooms() {
     }
     rooms.set(r.id, {
       id: r.id, name: r.name, game: r.game, hostId: r.host_id, isPublic: !!r.is_public, buyIn: r.buy_in,
-      members, bets: [], status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
+      members, bets: [], ready: new Set(), status: 'open', spinUntil: 0, lastSpin: null, recent: [], seq: 0,
     });
   }
   console.log(`Столы: поднято ${rooms.size}, возвращено ставок в банки: ${refunded}`);

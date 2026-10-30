@@ -93,13 +93,9 @@ m = await guest.wait(x => x.type === 'room' && x.event === 'sub');
 check(m.room.you.inRoom && !m.room.you.isHost, 'гость подписан');
 
 // ── ставки
-guest.send({ op: 'spin' });
-m = await guest.wait(x => x.type === 'error');
-check(/создатель/.test(m.error), 'гость не может крутить', m);
-
-host.send({ op: 'spin' });
+host.send({ op: 'ready' });
 m = await host.wait(x => x.type === 'error');
-check(/никто не поставил/.test(m.error), 'спин без ставок отклонён', m);
+check(/Сначала сделай ставку/.test(m.error), '«Готов» без ставки отклонён', m);
 
 guest.send({ op: 'bet', type: 'red', amount: 500 });
 m = await guest.wait(x => x.type === 'error');
@@ -121,9 +117,23 @@ check(r.data.room.bets.filter(b => b.userId === 2222).length === 2, 'одина�
 guest.send({ op: 'clear' }); await guest.wait(x => x.type === 'ok');
 guest.send({ op: 'bet', type: 'red', amount: 50 }); await guest.wait(x => x.type === 'ok');
 
-// ── спин: один исход на всех
+// ── «Готов»: пока готов только хост, колесо не крутится
 host.drain(); guest.drain();
-host.send({ op: 'spin' });
+host.send({ op: 'ready' }); await host.wait(x => x.type === 'ok');
+r = await api(`/rooms/${roomId}`);
+check(r.data.room.status === 'open' && r.data.room.you.ready && !r.data.room.players.find(p => p.id === 2222).ready, 'хост готов, гость ещё нет — ждём');
+
+// новая ставка снимает «Готов»
+host.send({ op: 'bet', type: 'black', amount: 0 + 40 }); await host.wait(x => x.type === 'ok');
+r = await api(`/rooms/${roomId}`);
+check(!r.data.room.you.ready, 'после новой ставки «Готов» сброшен');
+host.send({ op: 'clear' }); await host.wait(x => x.type === 'ok');
+host.send({ op: 'bet', type: 'black', amount: 40 }); await host.wait(x => x.type === 'ok');
+host.send({ op: 'ready' }); await host.wait(x => x.type === 'ok');
+
+// ── спин: гость жмёт «Готов» последним — один исход на всех
+host.drain(); guest.drain();
+guest.send({ op: 'ready' });
 const hs = await host.wait(x => x.type === 'room' && x.event === 'spin');
 const gs = await guest.wait(x => x.type === 'room' && x.event === 'spin');
 const spin = hs.room.lastSpin;
