@@ -39,7 +39,7 @@ export default function AdminPanel({ me, refresh }) {
   });
 
   return (
-    <main className="page">
+    <main className="page admin">
       <h3 className="section-title">👑 Админ-панель — управление балансами</h3>
       <div className="hint">Ты можешь устанавливать, начислять и списывать фишки у любого игрока, включая себя.</div>
 

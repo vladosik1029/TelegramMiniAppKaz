@@ -309,5 +309,9 @@
 .dk-card.ok .card { box-shadow: 0 0 0 2px var(--gold), 0 6px 14px rgba(0, 0, 0, .5); }
 .dk-card.trump .card::after { content: '★'; position: absolute; left: 5px; bottom: 3px; font-size: 10px; color: var(--gold2); }
 .dk-hand.many .dk-card { margin-left: -22px; }
+/* сколько бы карт ни было, рука помещается в ширину панели: нахлёст считается от числа карт */
+@supports (width: 1cqw) {
+  .dk-hand { container-type: inline-size; }
+  .dk-hand.many .dk-card { margin-left: clamp(-40px, calc((100cqw - var(--n) * 54px) / (var(--n) - 1)), 3px); }
+}
 .dk-hand .dk-card:first-child { margin-left: 0; }
-@media (min-width: 700px) { .dk-hand.many .dk-card { margin-left: -8px; } .dk-card .card { width: 62px; height: 88px; } }

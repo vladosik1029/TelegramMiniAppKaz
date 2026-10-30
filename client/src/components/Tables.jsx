@@ -423,7 +423,7 @@ function RoomScreen({ roomId, profile, onExit }) {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div className="game-screen room-screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {head}
 
       <div className="table-felt rw-felt">
