@@ -19,6 +19,7 @@ import Treasure from './games/Treasure.jsx';
 import { AnimatedNumber } from './components/fx.jsx';
 import { setMaxBet } from './components/ui.jsx';
 import { soundOn, setSoundOn, onSoundChange } from './sound.js';
+import { syncThemeFromServer } from './theme.js';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import Rules, { RulesCard } from './components/Rules.jsx';
@@ -71,7 +72,7 @@ export default function App() {
 
   useEffect(() => {
     try { tg?.ready?.(); tg?.expand?.(); } catch {}
-    api('/init').then(p => { setMaxBet(p.maxBet); setProfile(p); }).catch(e => setErr(e.message));
+    api('/init').then(p => { setMaxBet(p.maxBet); syncThemeFromServer(p.theme); setProfile(p); }).catch(e => setErr(e.message));
     ensureBrowserSeed(); // Provably Fair: client seed придумывает браузер, а не сервер
   }, []);
 

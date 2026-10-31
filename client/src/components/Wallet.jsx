@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { fmtShort } from './StakeStrip.jsx';
+import { THEMES, getTheme, chooseTheme, onThemeChange } from '../theme.js';
 
 export const GAME_NAMES = {
   blackjack: 'Blackjack', ochko: 'Очко', poker: 'Покер', roulette: 'Рулетка', roulette_room: 'Рулетка · стол', blackjack_room: 'Blackjack · стол', ochko_room: 'Очко · стол', poker_room: 'Покер · стол', durak_room: 'Дурак · стол', crash: 'Ракета', plinko: 'Плинко', baccarat: 'Баккара',
@@ -80,6 +81,8 @@ function Me({ profile }) {
         </div>
       )}
 
+      <ThemePicker />
+
       {data && (
         <>
           <h3 className="section-title">Значки <small>{got.length} из {data.badges.length}</small></h3>
@@ -132,6 +135,34 @@ function Me({ profile }) {
           </div>
         </div>
       ))}
+    </>
+  );
+}
+
+/** Выбор темы оформления: меняет фон и вид приложения, столы и игры остаются как есть */
+function ThemePicker() {
+  const [cur, setCur] = useState(getTheme());
+  useEffect(() => onThemeChange(setCur), []);
+  return (
+    <>
+      <h3 className="section-title">🎨 Оформление <small>фон и вид приложения, игры не меняются</small></h3>
+      <div className="theme-grid">
+        {THEMES.map(t => (
+          <button key={t.id} className={`theme-opt ${cur === t.id ? 'active' : ''}`} aria-pressed={cur === t.id}
+            onClick={() => { haptic('light'); chooseTheme(t.id); }}>
+            <span className="theme-swatch" style={{
+              background: `radial-gradient(120% 110% at 0% 0%, ${t.glow}66, transparent 60%),`
+                + (t.glow2 ? ` radial-gradient(120% 120% at 100% 100%, ${t.glow2}55, transparent 60%),` : '')
+                + ` ${t.bg}`,
+            }}>
+              {cur === t.id && <span className="theme-check">✓</span>}
+              <span className="theme-mini-felt" aria-hidden />
+              {t.dots.map(c => <i key={c} style={{ background: c }} />)}
+            </span>
+            <span className="theme-name"><b>{t.name}</b><small>{t.sub}</small></span>
+          </button>
+        ))}
+      </div>
     </>
   );
 }

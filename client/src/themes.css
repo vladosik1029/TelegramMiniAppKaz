@@ -1,0 +1,195 @@
+/* ─── Темы оформления ─────────────────────────────────────────────────────────
+   Тема меняет только «обёртку» приложения: фон страницы, шапку, нижнее меню,
+   плитки лобби, профиль, столы, правила, шторки и общие кнопки/поля.
+   Всё, что внутри игрового стола (.table-felt: сукно, карты, колесо, барабаны,
+   поля сапёра/башни/кено…), всегда рисуется классической палитрой — см. блок
+   «игры не меняются» внизу. Выбор: <html data-theme="…">, по умолчанию classic. */
+
+/* классика — «Изумрудный клуб» (исходная палитра приложения) */
+:root,
+.table-felt {
+  --bg: #0f1b14;
+  --bg2: #16261c;
+  --card: #1c3122;
+  --line: #2b4a35;
+  --line2: #3a6247;
+  --line3: #24402d;
+  --gold: #e6c065;
+  --gold2: #b48b3c;
+  --gold-rgb: 230, 192, 101;
+  --text: #e9efe9;
+  --muted: #90a696;
+  --green: #3ba36b;
+  --red: #d95b5b;
+  --card-face: #f6f3ea;
+  --radius: 16px;
+  --acc1: #3f7d55;
+  --acc2: #2c5a3d;
+  --acc-line: #4e9467;
+  --cta1: #f0d384;
+  --cta2: #b48b3c;
+  --cta-line: #f0d384;
+  --cta-text: #1b1407;
+  --hi1: #2b4a35;
+  --hi2: #1a2e21;
+  --wal1: #24422f;
+  --wal2: #17291f;
+  --bar: rgba(15, 27, 20, .98);
+  --bar-soft: rgba(15, 27, 20, .7);
+  --glass: rgba(14, 26, 18, .92);
+}
+:root {
+  --page-color: #101a13;
+  --page-image:
+    radial-gradient(1100px 520px at 50% -8%, rgba(63, 125, 85, .30), transparent 60%),
+    radial-gradient(900px 480px at 108% 108%, rgba(42, 92, 62, .22), transparent 65%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, .014) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, .05) 0 3px, transparent 3px 8px);
+  --page-size: auto;
+}
+
+/* ночной неон: фиолетовая ночь, розово-голубая подсветка, тонкая сетка */
+:root[data-theme="neon"] {
+  --bg: #0e0b1c; --bg2: #161130; --card: #1c163a;
+  --line: #3a2d66; --line2: #4f3c8a; --line3: #2b2252;
+  --gold: #63e6ff; --gold2: #b65cff; --gold-rgb: 99, 230, 255;
+  --text: #f1edff; --muted: #a79fcb;
+  --acc1: #7a34f0; --acc2: #4b1fa6; --acc-line: #9c63ff;
+  --cta1: #ff5fd6; --cta2: #8a2fe0; --cta-line: #ff8ce2; --cta-text: #fff;
+  --hi1: #35265f; --hi2: #1b1438;
+  --wal1: #2a1d52; --wal2: #150f2c;
+  --bar: rgba(14, 11, 28, .98); --bar-soft: rgba(14, 11, 28, .7); --glass: rgba(16, 12, 32, .92);
+  --page-color: #0b0917;
+  --page-image:
+    radial-gradient(900px 520px at -5% -10%, rgba(255, 60, 200, .26), transparent 60%),
+    radial-gradient(900px 560px at 110% 110%, rgba(40, 200, 255, .20), transparent 62%),
+    linear-gradient(rgba(156, 99, 255, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(156, 99, 255, .055) 1px, transparent 1px);
+  --page-size: auto, auto, 34px 34px, 34px 34px;
+}
+
+/* чёрное золото: люкс, глубокий чёрный и ромбовая «ар-деко» решётка */
+:root[data-theme="royal"] {
+  --bg: #0d0c09; --bg2: #16140f; --card: #1d1a13;
+  --line: #3b3222; --line2: #56482c; --line3: #2b251a;
+  --gold: #f2cf74; --gold2: #b8913f; --gold-rgb: 242, 207, 116;
+  --text: #f4eddd; --muted: #aa9e86;
+  --acc1: #8c6b2c; --acc2: #5b4519; --acc-line: #b88f43;
+  --hi1: #3a301d; --hi2: #1c1810;
+  --wal1: #2c2516; --wal2: #15120c;
+  --bar: rgba(12, 11, 8, .98); --bar-soft: rgba(12, 11, 8, .7); --glass: rgba(16, 14, 10, .92);
+  --page-color: #0a0907;
+  --page-image:
+    radial-gradient(1000px 520px at 50% -12%, rgba(242, 207, 116, .19), transparent 60%),
+    radial-gradient(760px 420px at 104% 106%, rgba(184, 145, 63, .14), transparent 65%),
+    repeating-linear-gradient(45deg, rgba(242, 207, 116, .035) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(-45deg, rgba(242, 207, 116, .035) 0 1px, transparent 1px 24px);
+  --page-size: auto;
+}
+
+/* глубокий космос: синяя ночь, туманности и звёзды */
+:root[data-theme="cosmos"] {
+  --bg: #0b1124; --bg2: #111b36; --card: #162242;
+  --line: #263c69; --line2: #33528d; --line3: #1e3058;
+  --gold: #ffd27a; --gold2: #c99a45; --gold-rgb: 255, 210, 122;
+  --text: #e9efff; --muted: #96a6c9;
+  --acc1: #3d66cc; --acc2: #26428f; --acc-line: #5c86e4;
+  --hi1: #24386a; --hi2: #121c38;
+  --wal1: #1d2f5c; --wal2: #0f1830;
+  --bar: rgba(10, 16, 34, .98); --bar-soft: rgba(10, 16, 34, .7); --glass: rgba(12, 19, 40, .92);
+  --page-color: #070c1c;
+  --page-image:
+    radial-gradient(1.5px 1.5px at 23px 37px, rgba(255, 255, 255, .85), transparent 100%),
+    radial-gradient(1px 1px at 131px 89px, rgba(255, 255, 255, .7), transparent 100%),
+    radial-gradient(1px 1px at 71px 151px, rgba(190, 210, 255, .65), transparent 100%),
+    radial-gradient(1.5px 1.5px at 197px 211px, rgba(255, 240, 210, .75), transparent 100%),
+    radial-gradient(1px 1px at 251px 29px, rgba(255, 255, 255, .55), transparent 100%),
+    radial-gradient(1px 1px at 53px 97px, rgba(255, 255, 255, .6), transparent 100%),
+    radial-gradient(1.5px 1.5px at 101px 13px, rgba(200, 220, 255, .7), transparent 100%),
+    radial-gradient(1px 1px at 11px 61px, rgba(255, 255, 255, .5), transparent 100%),
+    radial-gradient(800px 520px at 88% -8%, rgba(130, 90, 255, .30), transparent 60%),
+    radial-gradient(900px 620px at -12% 104%, rgba(40, 120, 255, .26), transparent 60%),
+    radial-gradient(520px 320px at 30% 42%, rgba(255, 120, 200, .07), transparent 70%);
+  --page-size: 173px 173px, 241px 241px, 199px 199px, 317px 317px, 283px 283px, 113px 113px, 149px 149px, 89px 89px, auto, auto, auto;
+}
+
+/* бордовый бархат: тёплое вино, ворс бархата, золотые акценты */
+:root[data-theme="velvet"] {
+  --bg: #1a0b11; --bg2: #241019; --card: #2e1520;
+  --line: #4f2535; --line2: #6b3448; --line3: #3d1c29;
+  --gold: #eec47c; --gold2: #b38a42; --gold-rgb: 238, 196, 124;
+  --text: #f7eaee; --muted: #c09ea8;
+  --acc1: #8f2b47; --acc2: #5e1b2f; --acc-line: #b24763;
+  --hi1: #4a2131; --hi2: #24101a;
+  --wal1: #3d1726; --wal2: #1f0c14;
+  --bar: rgba(24, 10, 16, .98); --bar-soft: rgba(24, 10, 16, .7); --glass: rgba(28, 12, 19, .92);
+  --page-color: #15080d;
+  --page-image:
+    radial-gradient(1000px 560px at 50% -10%, rgba(200, 50, 95, .30), transparent 60%),
+    radial-gradient(820px 500px at 104% 110%, rgba(238, 196, 124, .10), transparent 65%),
+    radial-gradient(700px 460px at -10% 80%, rgba(120, 20, 50, .30), transparent 65%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .016) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .09) 0 2px, transparent 2px 9px);
+  --page-size: auto;
+}
+
+/* северное сияние: полярная ночь, мятные и сиреневые всполохи */
+:root[data-theme="aurora"] {
+  --bg: #08161c; --bg2: #0e2129; --card: #122a33;
+  --line: #1f4450; --line2: #2b5d6a; --line3: #18363f;
+  --gold: #6ff0c8; --gold2: #2fae97; --gold-rgb: 111, 240, 200;
+  --text: #e7f6f4; --muted: #8fb0b0;
+  --acc1: #1e8a78; --acc2: #135f55; --acc-line: #35b59f;
+  --cta1: #8ff7d6; --cta2: #2a9f8c; --cta-line: #a9fbe2; --cta-text: #062019;
+  --hi1: #1d4450; --hi2: #0e2128;
+  --wal1: #163a45; --wal2: #0b1d23;
+  --bar: rgba(7, 20, 26, .98); --bar-soft: rgba(7, 20, 26, .7); --glass: rgba(9, 24, 30, .92);
+  --page-color: #061116;
+  --page-image:
+    radial-gradient(1px 1px at 41px 63px, rgba(255, 255, 255, .6), transparent 100%),
+    radial-gradient(1px 1px at 157px 23px, rgba(220, 255, 245, .5), transparent 100%),
+    radial-gradient(1200px 380px at 28% -6%, rgba(60, 240, 180, .25), transparent 60%),
+    radial-gradient(900px 360px at 86% 4%, rgba(130, 95, 255, .24), transparent 62%),
+    radial-gradient(1000px 560px at 50% 118%, rgba(30, 160, 200, .18), transparent 65%);
+  --page-size: 211px 211px, 263px 263px, auto, auto, auto;
+}
+
+/* ─── игры не меняются ─────────────────────────────────────────────────────────
+   Внутри стола палитра всегда классическая (блок :root, .table-felt выше
+   переопределяет переменные обратно), сукно и рамки заданы в styles.css. */
+
+/* лёгкие штрихи темы на обёртке */
+:root[data-theme="neon"] .coin-value,
+:root[data-theme="neon"] .bottombar button.active { text-shadow: 0 0 10px rgba(99, 230, 255, .55); }
+:root[data-theme="neon"] .bottombar button.active { box-shadow: inset 0 0 0 1px rgba(182, 92, 255, .35), 0 0 14px rgba(182, 92, 255, .25); }
+:root[data-theme="royal"] .bottombar button.active { box-shadow: inset 0 0 0 1px rgba(242, 207, 116, .25), 0 0 12px rgba(242, 207, 116, .12); }
+:root[data-theme="aurora"] .coin-value { text-shadow: 0 0 10px rgba(111, 240, 200, .35); }
+
+/* ─── выбор темы в профиле ──────────────────────────────────────────────────── */
+.theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.theme-opt {
+  position: relative; cursor: pointer; text-align: left; color: var(--text);
+  border: 1px solid var(--line); border-radius: 14px; padding: 0; overflow: hidden;
+  background: var(--card); display: flex; flex-direction: column;
+  transition: border-color .15s, transform .08s;
+}
+.theme-opt:active { transform: scale(.97); }
+.theme-opt.active { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(var(--gold-rgb), .35); }
+.theme-swatch {
+  position: relative; height: 58px;
+  display: flex; align-items: flex-end; gap: 4px; padding: 8px;
+}
+.theme-swatch i { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255, 255, 255, .18); }
+.theme-swatch .theme-mini-felt {
+  position: absolute; right: 8px; top: 8px; width: 34px; height: 24px; border-radius: 6px;
+  background: linear-gradient(180deg, #1d4230, #102a1c); border: 1px solid rgba(230, 192, 101, .45);
+}
+.theme-check {
+  position: absolute; left: 8px; top: 8px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--gold); color: #10140f; font-size: 12px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+.theme-name { padding: 8px 10px 9px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.theme-name b { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.theme-name small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (min-width: 900px) { .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

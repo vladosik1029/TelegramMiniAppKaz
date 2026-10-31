@@ -38,7 +38,7 @@
 .icon-btn {
   flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-width: 40px; height: 40px; padding: 0 10px; border-radius: 12px; cursor: pointer;
-  background: var(--card); border: 1px solid #2b4a35; color: var(--text);
+  background: var(--card); border: 1px solid var(--line); color: var(--text);
   font-size: 18px; font-weight: 700;
 }
 .icon-btn:active { transform: scale(.95); }
@@ -54,7 +54,7 @@
 }
 .sheet {
   position: relative; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto;
-  background: var(--bg); border: 1px solid #2b4a35; border-bottom: none;
+  background: var(--bg); border: 1px solid var(--line); border-bottom: none;
   border-radius: 20px 20px 0 0; padding: 14px 12px calc(16px + env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }
@@ -62,7 +62,7 @@
 .sheet-close {
   position: sticky; top: 0; float: right; z-index: 1;
   width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-  background: var(--card); border: 1px solid #2b4a35; color: var(--text); font-size: 15px;
+  background: var(--card); border: 1px solid var(--line); color: var(--text); font-size: 15px;
 }
 
 /* правила: пилюли переносятся на несколько строк вместо горизонтального скролла */
@@ -87,14 +87,14 @@
   .bottombar {
     order: -1; position: sticky; top: 0; left: auto; transform: none;
     width: 100%; max-width: none; margin: 0 0 18px;
-    padding: 8px; border: 1px solid #24402d; border-radius: 16px;
+    padding: 8px; border: 1px solid var(--line3); border-radius: 16px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
   }
   .bottombar button {
     flex-direction: row; gap: 8px;
     justify-content: center; font-size: 15px; padding: 10px 0;
   }
-  .bottombar button:not(.active):hover { color: var(--text); border-color: #3a6247; }
+  .bottombar button:not(.active):hover { color: var(--text); border-color: var(--line2); }
   .bottombar .tab-icon { font-size: 18px; }
   .bottombar.five .tab-label { font-size: 14px; }
 
@@ -135,7 +135,7 @@
   .game-topbar-title { font-size: 20px; }
 
   .sheet-backdrop { align-items: center; }
-  .sheet { border-radius: 20px; border-bottom: 1px solid #2b4a35; max-height: 84vh; padding: 18px 18px 22px; }
+  .sheet { border-radius: 20px; border-bottom: 1px solid var(--line); max-height: 84vh; padding: 18px 18px 22px; }
 
   .rules > div, .rules-controls { max-width: 760px; }
   .tables, .wallet, .admin { max-width: 760px; margin: 0 auto; width: 100%; }
@@ -145,18 +145,18 @@
 /* ─── Provably Fair: «Проверка честности» ───────────── */
 .topbar-right { display: flex; align-items: center; gap: 8px; }
 .fair { padding: 4px 4px 0; }
-.fair-how { margin: 12px 0; background: var(--card); border: 1px solid #2b4a35; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.45; }
+.fair-how { margin: 12px 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.45; }
 .fair-how summary { cursor: pointer; font-weight: 700; color: var(--gold); }
 .fair-how ol { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .fair-tabs { margin: 10px 0; }
-.fair-card { background: var(--card); border: 1px solid #2b4a35; border-radius: 14px; padding: 12px; margin: 10px 0; }
+.fair-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin: 10px 0; }
 .fair-revealed { border-color: var(--gold2); }
 .fair-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 4px; }
 .fair-field .fair-label { margin-top: 8px; }
 .fair-code {
   display: block; width: 100%; text-align: left; cursor: pointer;
   font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text);
-  background: var(--bg2); border: 1px solid #2b4a35; border-radius: 8px; padding: 7px 9px;
+  background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px;
   overflow-wrap: anywhere; word-break: break-all;
 }
 .fair-seed-row { display: flex; gap: 8px; align-items: center; }
@@ -166,7 +166,7 @@
 .fair-round { margin-bottom: 6px; }
 .fair-round-head { width: 100%; cursor: pointer; color: inherit; font: inherit; text-align: left; }
 .fair-round.open .fair-round-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.fair-round-body { background: var(--bg2); border: 1px solid #2b4a35; border-top: none; border-radius: 0 0 12px 12px; padding: 4px 12px 12px; }
+.fair-round-body { background: var(--bg2); border: 1px solid var(--line); border-top: none; border-radius: 0 0 12px 12px; padding: 4px 12px 12px; }
 .fair-badge { font-size: 12px; font-weight: 800; text-align: right; color: var(--muted); }
 .fair-badge.pos { color: #8fe0b0; }
 .fair-badge.neg { color: #f0a7ab; }
@@ -178,7 +178,7 @@
 .fair-outcome { margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--gold); overflow-wrap: anywhere; }
 .fair-line {
   flex-basis: 100%; margin-top: 6px; cursor: pointer; text-align: left;
-  background: none; border: 1px dashed #2b4a35; border-radius: 10px; padding: 6px 10px;
+  background: none; border: 1px dashed var(--line); border-radius: 10px; padding: 6px 10px;
   color: var(--muted); font-size: 12px;
 }
 .fair-line code { font-family: ui-monospace, Menlo, monospace; color: var(--text); }
@@ -196,17 +196,17 @@
   pointer-events: auto;
   display: inline-flex; align-items: center; gap: 7px; max-width: 100%;
   height: 32px; padding: 0 14px; border-radius: 999px;
-  background: rgba(14, 26, 18, .92); border: 1px solid #3a6247;
+  background: var(--glass); border: 1px solid var(--line2);
   box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
   white-space: nowrap; overflow: hidden;
   transition: border-color .2s, box-shadow .2s;
 }
-.stake-pill.live { border-color: var(--gold2); box-shadow: 0 4px 16px rgba(230, 192, 101, .18); }
+.stake-pill.live { border-color: var(--gold2); box-shadow: 0 4px 16px rgba(var(--gold-rgb), .18); }
 .stake-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .stake-value { font-size: 16px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
 .stake-sub {
   font-size: 12px; font-weight: 700; color: var(--text); opacity: .85;
-  padding-left: 8px; border-left: 1px solid #3a6247; overflow: hidden; text-overflow: ellipsis;
+  padding-left: 8px; border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis;
 }
 .stake-dot {
   flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--green);
@@ -243,7 +243,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; font-weight: 900; color: #1b1407;
   background: linear-gradient(160deg, var(--gold), var(--gold2));
-  box-shadow: 0 0 0 3px rgba(230, 192, 101, .2);
+  box-shadow: 0 0 0 3px rgba(var(--gold-rgb), .2);
 }
 .profile-name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .profile-name b { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -253,12 +253,12 @@
 .profile-balance b { color: var(--gold); font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .level-bar {
   position: relative; margin: 14px 0 8px; height: 22px; border-radius: 999px; overflow: hidden;
-  background: rgba(0, 0, 0, .3); border: 1px solid #2b4a35;
+  background: rgba(0, 0, 0, .3); border: 1px solid var(--line);
 }
 .level-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--gold2), var(--gold)); border-radius: 999px; }
 .level-bar span { position: relative; display: block; text-align: center; font-size: 11px; line-height: 20px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .7); }
 .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.stat { background: var(--card); border: 1px solid #2b4a35; border-radius: 12px; padding: 9px 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 9px 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .stat small { font-size: 10.5px; color: var(--muted); }
 .stat b { font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stat b.pos { color: var(--green); } .stat b.neg { color: var(--red); }
@@ -266,8 +266,8 @@
 .section-title small { margin-left: 6px; }
 .badge-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .badge { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center;
-  background: var(--bg2); border: 1px dashed #2b4a35; border-radius: 12px; padding: 8px 10px; opacity: .55; filter: grayscale(.8); }
-.badge.got { opacity: 1; filter: none; border-style: solid; border-color: var(--gold2); background: linear-gradient(160deg, #2b4a35, #1a2e21); }
+  background: var(--bg2); border: 1px dashed var(--line); border-radius: 12px; padding: 8px 10px; opacity: .55; filter: grayscale(.8); }
+.badge.got { opacity: 1; filter: none; border-style: solid; border-color: var(--gold2); background: linear-gradient(160deg, var(--hi1), var(--hi2)); }
 .badge-icon { grid-row: 1 / 3; font-size: 26px; text-align: center; }
 .badge b { font-size: 13px; }
 .badge small { font-size: 10.5px; color: var(--muted); line-height: 1.25; }
@@ -276,9 +276,9 @@
 .lb-filters .seg { margin: 0 0 6px; }
 .lb-note { margin: 2px 0 10px; font-size: 12px; }
 .lb-list { display: flex; flex-direction: column; gap: 6px; }
-.lb-row { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid #2b4a35; border-radius: 12px; padding: 10px 12px; }
-.lb-row.podium { background: linear-gradient(160deg, #2b4a35, #1a2e21); }
-.lb-row.me { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(230, 192, 101, .35); }
+.lb-row { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.lb-row.podium { background: linear-gradient(160deg, var(--hi1), var(--hi2)); }
+.lb-row.me { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(var(--gold-rgb), .35); }
 .lb-place { flex: none; width: 28px; text-align: center; font-weight: 900; font-size: 16px; color: var(--muted); }
 .lb-row.podium .lb-place { font-size: 22px; }
 .lb-name { flex: 1; min-width: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

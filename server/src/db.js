@@ -66,6 +66,10 @@ CREATE TABLE IF NOT EXISTS room_bets (
 if (!db.prepare('PRAGMA table_info(users)').all().some(c => c.name === 'last_seen')) {
   db.exec('ALTER TABLE users ADD COLUMN last_seen TEXT');
 }
+// тема оформления приложения (только внешний вид, на игры не влияет)
+if (!db.prepare('PRAGMA table_info(users)').all().some(c => c.name === 'theme')) {
+  db.exec('ALTER TABLE users ADD COLUMN theme TEXT');
+}
 
 /** Транзакция: fn выполняется внутри BEGIN/COMMIT, при ошибке — ROLLBACK */
 export function tx(fn) {

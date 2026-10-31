@@ -111,9 +111,19 @@ function me(user) {
     dev: !!user.dev,
     botUsername: env.BOT_USERNAME,
     maxBet: MAX_BET,
+    theme: db.prepare('SELECT theme FROM users WHERE id = ?').get(user.id)?.theme ?? null,
     history,
   };
 }
+
+// Тема оформления: хранится у игрока, чтобы совпадала на телефоне и ПК
+export const THEMES = ['classic', 'neon', 'royal', 'cosmos', 'velvet', 'aurora'];
+api.post('/settings/theme', (req, res) => {
+  const theme = String(req.body?.theme ?? '');
+  if (!THEMES.includes(theme)) return res.status(400).json({ error: 'Неизвестная тема' });
+  db.prepare('UPDATE users SET theme = ? WHERE id = ?').run(theme, req.user.id);
+  res.json({ theme });
+});
 
 // ─── игровой движок ──────────────────────────────────────────────────────────
 const GAMES = { blackjack, ochko, poker, roulette, dice, slots, mines, hilo, plinko, baccarat, limbo, tower, keno, treasure };
