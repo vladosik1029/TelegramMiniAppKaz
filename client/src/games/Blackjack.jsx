@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { Hand, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 import StakeStrip from '../components/StakeStrip.jsx';
+import { BetSpot } from '../components/Chips.jsx';
 
 export default function Blackjack({ profile, refresh }) {
   const [bet, setBet] = useState(50);
@@ -53,7 +54,7 @@ export default function Blackjack({ profile, refresh }) {
       <StakeStrip amount={view ? bet * (view.betUnits ?? 1) : bet} live={!!inRound} sub={inRound && view.betUnits > 1 ? 'дабл ×2' : null} />
       <div className="table-felt">
         <Hand title="🤖 Дилер" cards={view?.dealer ?? []} total={view?.dealerTotal} />
-        <div className="felt-sep" />
+        <BetSpot amount={view ? bet * (view.betUnits ?? 1) : 0} />
         <Hand
           title="🙋 Ты" cards={view?.player ?? []} total={view?.playerTotal}
           label={view?.playerTotal === 21 && view.player.length === 2 && inRound ? 'Blackjack!' :

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { CardView, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 import StakeStrip from '../components/StakeStrip.jsx';
+import { BetSpot } from '../components/Chips.jsx';
 
 function PokerHand({ title, cards, label, selectable, selected, onToggle }) {
   return (
@@ -90,7 +91,7 @@ export default function Poker({ profile, refresh }) {
           title="🤖 Бот" cards={view?.bot ?? []}
           label={view?.botHand || null}
         />
-        <div className="felt-sep" />
+        <BetSpot amount={view ? bet : 0} />
         <PokerHand
           title="🙋 Ты" cards={view?.player ?? []}
           label={view?.playerHand || null}

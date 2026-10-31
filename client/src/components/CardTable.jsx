@@ -9,6 +9,7 @@ import { haptic, wsSend } from '../api.js';
 import { CardView, actionsStagger, actionsItem } from './ui.jsx';
 import { AnimatedNumber } from './fx.jsx';
 import StakeStrip, { fmtShort } from './StakeStrip.jsx';
+import { ChipStack } from './Chips.jsx';
 
 const fmt = (n) => Number(n).toLocaleString('ru-RU');
 const CHIPS = [5, 10, 25, 50, 100, 500];
@@ -296,6 +297,7 @@ function Seat({ seat: s, round: r, poker, me, active, discard, onToggle }) {
         {poker && s.hand && <span className="ct-hand">{s.hand}</span>}
         {tag && <span className={`ct-tag ${s.status ?? ''}`}>{tag}</span>}
         <span className="ct-stake">
+          <ChipStack amount={poker ? s.contrib : s.stake * s.units} size="sm" max={5} />
           {poker ? `${fmt(s.contrib)} 🪙` : `${fmt(s.stake * s.units)} 🪙${s.units > 1 ? ' ×2' : ''}`}
         </span>
       </div>

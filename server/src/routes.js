@@ -8,6 +8,10 @@ import * as ochko from './games/ochko.js';
 import * as poker from './games/poker.js';
 import * as roulette from './games/roulette.js';
 import * as dice from './games/dice.js';
+import * as limbo from './games/limbo.js';
+import * as tower from './games/tower.js';
+import * as keno from './games/keno.js';
+import * as treasure from './games/treasure.js';
 import * as plinko from './games/plinko.js';
 import * as baccarat from './games/baccarat.js';
 import * as slots from './games/slots.js';
@@ -23,6 +27,7 @@ import {
   FAIR_ERRORS, takeNonce, openRound, closeRound, fairState, setClientSeed, rotateSeed, fairHistory, publicRounds,
 } from './fair/index.js';
 import { admin } from './admin.js';
+import { profileStats, leaderboard } from './profile.js';
 
 export const api = Router();
 
@@ -111,7 +116,7 @@ function me(user) {
 }
 
 // ─── игровой движок ──────────────────────────────────────────────────────────
-const GAMES = { blackjack, ochko, poker, roulette, dice, slots, mines, hilo, plinko, baccarat };
+const GAMES = { blackjack, ochko, poker, roulette, dice, slots, mines, hilo, plinko, baccarat, limbo, tower, keno, treasure };
 
 function validateBet(bet) {
   bet = Math.floor(Number(bet));
@@ -230,6 +235,12 @@ function handleError(e, res) {
 }
 
 // ─── Provably Fair: сиды игрока, смена сида, история для проверки ───────────
+
+api.get('/profile', (req, res) => res.json(profileStats(req.user.id)));
+api.get('/leaderboard', (req, res) => res.json(leaderboard(req.user.id, {
+  period: req.query.period === 'all' ? 'all' : 'week',
+  by: req.query.by === 'best' ? 'best' : 'net',
+})));
 
 api.get('/fair', (req, res) => {
   res.json({ ...fairState(req.user.id), crash: crashFair() });

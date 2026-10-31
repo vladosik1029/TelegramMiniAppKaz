@@ -17,6 +17,11 @@ import * as ochko from '../src/games/ochko.js';
 import * as poker from '../src/games/poker.js';
 import * as roulette from '../src/games/roulette.js';
 import * as dice from '../src/games/dice.js';
+import * as limbo from '../src/games/limbo.js';
+import * as tower from '../src/games/tower.js';
+import * as keno from '../src/games/keno.js';
+import * as treasure from '../src/games/treasure.js';
+import { treasureGrid } from '../src/fair/games.js';
 import * as plinko from '../src/games/plinko.js';
 import * as baccarat from '../src/games/baccarat.js';
 import * as slots from '../src/games/slots.js';
@@ -127,6 +132,12 @@ const SOLO = [
   ['dice', dice, () => ({ dir: 'under', target: 50 }), null, (p) => Math.round(p.res.view.roll * 100) === p.record.roll],
   ['slots', slots, () => null, null, (p) => p.res.view.line.join() === p.record.stops.map(i => SLOT_STRIP[i]).join()],
   ['plinko', plinko, () => ({ risk: 'high' }), null, (p) => p.res.view.path.join() === p.record.path.join()],
+  ['limbo', limbo, (i) => ({ target: 1.5 + i }), null, (p) => p.res.view.point === p.record.point],
+  ['tower', tower, (i) => ({ level: ['easy', 'medium', 'hard', 'expert'][i % 4] }), (res, k) => (k > 3 ? 'cashout' : 'pick:0'),
+    (p) => JSON.stringify(p.res.view.bombs) === JSON.stringify(p.record.bombs) && p.record.bombs.length === 8],
+  ['keno', keno, () => ({ picks: [1, 5, 9, 13, 17] }), null, (p) => p.res.view.drawn.join() === p.record.drawn.join()],
+  ['treasure', treasure, () => null, null,
+    (p) => p.res.view.spins.length === p.record.spins.length && p.res.view.spins.every((sp, i) => JSON.stringify(sp.grid) === JSON.stringify(treasureGrid(p.record.spins[i])))],
   ['mines', mines, (i) => ({ mines: 1 + (i % 24) }), (res, k) => (k > 3 ? 'cashout' : 'open:' + ((k * 7) % 25)),
     (p) => p.res.view.bombs.join() === p.record.bombs.join() && p.record.bombs.length === p.params.mines],
   ['hilo', hilo, () => null, (res, k) => (k > 4 ? 'cashout' : res.view.hi.chance >= res.view.lo.chance ? 'hi' : 'lo'),
