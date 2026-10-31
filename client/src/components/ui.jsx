@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { haptic } from '../api.js';
+import { play } from '../sound.js';
 import { CoinBurst } from './fx.jsx';
 
 const colorOf = (c) => (c.s === '♥' || c.s === '♦' ? 'red' : 'black');
@@ -13,10 +14,17 @@ export function CardView({ card, dim, delay = 0 }) {
   const prevHidden = useRef(false);
   const [flipping, setFlipping] = useState(false);
 
+  // шорох раздачи: карта появилась на столе
+  useEffect(() => {
+    const t = setTimeout(() => play('card'), delay * 1000);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     const hidden = !!card?.hidden;
     if (prevHidden.current && card && !hidden) {
       setFlipping(true);
+      play('card');
       const t = setTimeout(() => setFlipping(false), 700);
       prevHidden.current = false;
       return () => clearTimeout(t);
@@ -91,7 +99,7 @@ export function BetStepper({ balance, bet, setBet, disabled }) {
   const len = text.length;
   const fontSize = len <= 5 ? undefined : len <= 7 ? 15 : len <= 9 ? 13 : 11;
 
-  const step = (d) => { haptic('light'); setBet(clamp(bet + d)); };
+  const step = (d) => { haptic('light', 'chip'); setBet(clamp(bet + d)); };
   return (
     <div className="bet-row bet-stepper">
       <button className="chip" disabled={disabled || bet <= 1} onClick={() => step(-1000)}>−1000</button>

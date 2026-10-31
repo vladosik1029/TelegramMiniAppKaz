@@ -380,7 +380,7 @@ function RoomScreen({ roomId, profile, onExit }) {
     if (!canBet) return;
     const amount = Math.min(chip, you.roomBalance);
     if (amount < 1) return;
-    haptic('light'); setErr('');
+    haptic('light', 'chip'); setErr('');
     wsSend({ op: 'bet', type, value, amount });
   };
 
