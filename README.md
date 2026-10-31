@@ -82,6 +82,7 @@ TelegramMiniAppKaz/
 | `BOT_TOKEN`    | токен твоего бота | [@BotFather] → /mybots → API Token |
 | `ADMIN_IDS`    | Telegram ID админов (ты) — через запятую | напиши боту [@userinfobot] — он покажет твой ID |
 | `START_BALANCE`| стартовый баланс новых игроков | по умолчанию 1000 фишек |
+| `MAX_BET`      | максимальная ставка и бай-ин стола | по умолчанию 1 000 000 000 |
 | `DEV_MODE`     | `1` — работать в браузере без Telegram (dev) | в продакшене убрать/`0` |
 | `DEV_USER_ID`  | ID тестового игрока для DEV_MODE | любой числовой, добавь в `ADMIN_IDS` чтобы видеть админку |
 | `WEBAPP_URL`   | HTTPS-адрес MiniApp | см. деплой ниже |

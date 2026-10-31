@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { haptic } from '../api.js';
+import { play } from '../sound.js';
 import { CoinBurst } from './fx.jsx';
 
 const colorOf = (c) => (c.s === '♥' || c.s === '♦' ? 'red' : 'black');
@@ -13,10 +14,17 @@ export function CardView({ card, dim, delay = 0 }) {
   const prevHidden = useRef(false);
   const [flipping, setFlipping] = useState(false);
 
+  // шорох раздачи: карта появилась на столе
+  useEffect(() => {
+    const t = setTimeout(() => play('card'), delay * 1000);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     const hidden = !!card?.hidden;
     if (prevHidden.current && card && !hidden) {
       setFlipping(true);
+      play('card');
       const t = setTimeout(() => setFlipping(false), 700);
       prevHidden.current = false;
       return () => clearTimeout(t);
@@ -75,8 +83,9 @@ export function Hand({ title, cards, total, label }) {
  * Поле держит свой текст, пока игрок печатает, а в bet попадает уже зажатое
  * в [1, баланс] число (пустое поле на blur возвращает текущую ставку).
  */
-// Потолок ставки — как MAX_BET на сервере (server/src/telegram.js)
-export const MAX_BET = 1000000;
+// Потолок ставки — сервер присылает свой MAX_BET в /init (App вызывает setMaxBet)
+export let MAX_BET = 1_000_000_000;
+export const setMaxBet = (v) => { if (Number(v) >= 1) MAX_BET = Math.floor(Number(v)); };
 
 export function BetStepper({ balance, bet, setBet, disabled }) {
   const max = Math.max(Math.min(balance, MAX_BET), 1);
@@ -90,7 +99,7 @@ export function BetStepper({ balance, bet, setBet, disabled }) {
   const len = text.length;
   const fontSize = len <= 5 ? undefined : len <= 7 ? 15 : len <= 9 ? 13 : 11;
 
-  const step = (d) => { haptic('light'); setBet(clamp(bet + d)); };
+  const step = (d) => { haptic('light', 'chip'); setBet(clamp(bet + d)); };
   return (
     <div className="bet-row bet-stepper">
       <button className="chip" disabled={disabled || bet <= 1} onClick={() => step(-1000)}>−1000</button>
@@ -104,7 +113,7 @@ export function BetStepper({ balance, bet, setBet, disabled }) {
           style={fontSize ? { fontSize } : undefined}
           onFocus={(e) => { setEditing(true); setText(String(bet)); requestAnimationFrame(() => e.target.select()); }}
           onChange={(e) => {
-            const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+            const digits = e.target.value.replace(/\D/g, '').slice(0, 13);
             setText(digits);
             if (digits) setBet(clamp(digits));
           }}

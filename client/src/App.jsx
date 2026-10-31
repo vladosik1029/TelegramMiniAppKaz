@@ -13,6 +13,8 @@ import Crash from './games/Crash.jsx';
 import Plinko from './games/Plinko.jsx';
 import Baccarat from './games/Baccarat.jsx';
 import { AnimatedNumber } from './components/fx.jsx';
+import { setMaxBet } from './components/ui.jsx';
+import { soundOn, setSoundOn, onSoundChange } from './sound.js';
 import Wallet from './components/Wallet.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import Rules, { RulesCard } from './components/Rules.jsx';
@@ -61,7 +63,7 @@ export default function App() {
 
   useEffect(() => {
     try { tg?.ready?.(); tg?.expand?.(); } catch {}
-    api('/init').then(setProfile).catch(e => setErr(e.message));
+    api('/init').then(p => { setMaxBet(p.maxBet); setProfile(p); }).catch(e => setErr(e.message));
     ensureBrowserSeed(); // Provably Fair: client seed придумывает браузер, а не сервер
   }, []);
 
@@ -122,6 +124,7 @@ export default function App() {
           {profile.isAdmin && <div className="admin-badge">👑 Админ</div>}
         </div>
         <div className="topbar-right">
+          <SoundToggle />
           {fairBtn}
           <Coin balance={balance} />
         </div>
@@ -222,6 +225,17 @@ const gridItem = {
   hidden: { opacity: 0, y: 14, scale: .96 },
   show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 380, damping: 26 } },
 };
+
+function SoundToggle() {
+  const [on, setOn] = useState(soundOn());
+  useEffect(() => onSoundChange(setOn), []);
+  return (
+    <button className="icon-btn" aria-label={on ? 'Выключить звук' : 'Включить звук'} title={on ? 'Звук включён' : 'Звук выключен'}
+      onClick={() => { haptic('light', null); setSoundOn(!on); }}>
+      {on ? '🔊' : '🔇'}
+    </button>
+  );
+}
 
 export function Coin({ balance }) {
   return (

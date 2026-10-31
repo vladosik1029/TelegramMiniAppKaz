@@ -1,3 +1,4 @@
+import { play, HAPTIC_SOUND } from './sound.js';
 // Клиент API: шлёт Telegram initData в заголовке Authorization: tma ...
 
 let initData = '';
@@ -22,7 +23,9 @@ export async function api(path, body) {
 /** payload Type: Telegram.WebApp */
 export const tg = window.Telegram?.WebApp;
 
-export function haptic(type = 'light') {
+/** Вибро в Telegram + звук того же смысла (sound — переопределить звук, null — без звука) */
+export function haptic(type = 'light', sound) {
+  play(sound === undefined ? HAPTIC_SOUND[type] : sound);
   try {
     if (type === 'success' || type === 'error') tg?.HapticFeedback?.notificationOccurred(type);
     else tg?.HapticFeedback?.impactOccurred(type);

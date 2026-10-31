@@ -81,7 +81,7 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
     prevPhase.current = r.phase;
   }, [r.phase]);
 
-  const send = (msg) => { haptic('light'); setErr(''); wsSend(msg); };
+  const send = (msg) => { haptic('light', msg.op === 'bet' ? 'chip' : undefined); setErr(''); wsSend(msg); };
   const myTurn = durak ? r.phase === 'playing' && r.turnId === profile.id : r.you.actions.length > 0;
   const turnSeat = r.seats.find(s => s.id === r.turnId);
 
