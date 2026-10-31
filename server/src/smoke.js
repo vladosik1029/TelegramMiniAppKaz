@@ -14,6 +14,7 @@ import * as hilo from './games/hilo.js';
 import * as limbo from './games/limbo.js';
 import * as tower from './games/tower.js';
 import * as keno from './games/keno.js';
+import * as treasure from './games/treasure.js';
 
 const assert = (cond, msg) => { if (!cond) { console.error('FAIL:', msg); process.exitCode = 1; } };
 
@@ -253,4 +254,22 @@ for (const o of [{ picks: [] }, { picks: [1, 1] }, { picks: [0] }, { picks: [41]
     assert(ev > 0.96 && ev <= 0.99, `кено ${p}: точный возврат ${ev}`);
   }
   console.log('Кено: точный возврат по всем строкам таблицы 96–99%');
+}
+
+{
+  // Сокровища: возврат на 200 тыс. раундов (фриспины редкие, нужна большая выборка)
+  let paid = 0, fs = 0;
+  const N = 200000;
+  for (let i = 0; i < N; i++) {
+    const r = treasure.start(10);
+    assert(Number.isFinite(r.returnMult) && r.returnMult >= 0, 'treasure mult');
+    paid += r.returnMult;
+    if (r.view.freeSpins) fs++;
+  }
+  console.log(`Сокровища: средний возврат = ${(paid / N).toFixed(3)}, фриспины раз в ${Math.round(N / fs)} спинов`);
+  assert(paid / N > 0.93 && paid / N < 0.99, 'treasure RTP вне 93–99%');
+  // вайлды на средней линии → выплата вайлда за 5
+  const g = [['C', 'W', 'C'], ['C', 'W', 'C'], ['C', 'W', 'C'], ['C', 'W', 'C'], ['C', 'W', 'C']];
+  const e = treasure.evaluate(g);
+  assert(e.wins.find(w => w.line === 0)?.mult === 250, 'treasure: 5 вайлдов = ×250');
 }

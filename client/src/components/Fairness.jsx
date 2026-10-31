@@ -206,7 +206,7 @@ function RoundRow({ r }) {
 
 const Check = ({ ok, text }) => <div className={`fair-check ${ok ? 'pos' : 'neg'}`}>{ok ? '✓' : '✗'} {text}</div>;
 
-const MANUAL_GAMES = ['roulette', 'dice', 'slots', 'plinko', 'mines', 'hilo', 'limbo', 'tower', 'keno', 'blackjack', 'ochko', 'poker', 'baccarat', 'crash',
+const MANUAL_GAMES = ['roulette', 'dice', 'slots', 'plinko', 'mines', 'hilo', 'limbo', 'tower', 'keno', 'treasure', 'blackjack', 'ochko', 'poker', 'baccarat', 'crash',
   'roulette_room', 'blackjack_room', 'ochko_room', 'poker_room', 'durak_room'];
 
 /** Пересчёт по любым сидам — например, скопированным из истории */

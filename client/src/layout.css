@@ -287,3 +287,11 @@
 .lb-score { flex: none; color: var(--green); font-variant-numeric: tabular-nums; }
 .lb-gap { text-align: center; color: var(--muted); line-height: .6; }
 @media (min-width: 900px) { .stat-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } .badge-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* шапка игры на узком телефоне: кнопки компактнее, чтобы название не сжималось до значка */
+@media (max-width: 420px) {
+  .game-topbar { gap: 6px; }
+  .game-topbar .icon-btn { min-width: 36px; height: 36px; padding: 0 6px; font-size: 16px; border-radius: 10px; }
+  .game-topbar .coin { padding: 5px 10px; gap: 4px; }
+  .game-topbar-title { font-size: 16px; }
+}

@@ -15,6 +15,7 @@ import Baccarat from './games/Baccarat.jsx';
 import Limbo from './games/Limbo.jsx';
 import Tower from './games/Tower.jsx';
 import Keno from './games/Keno.jsx';
+import Treasure from './games/Treasure.jsx';
 import { AnimatedNumber } from './components/fx.jsx';
 import { setMaxBet } from './components/ui.jsx';
 import { soundOn, setSoundOn, onSoundChange } from './sound.js';
@@ -33,6 +34,7 @@ const GAMES = [
   { id: 'crash', title: 'Ракета', subtitle: 'Забери до взрыва', icon: '🚀', group: 'online', accent: 'amber', live: true },
   { id: 'plinko', title: 'Плинко', subtitle: 'Шарик через колышки, до ×170', icon: '🟡', group: 'quick', accent: 'violet' },
   { id: 'roulette', title: 'Рулетка', subtitle: 'Европейская, 37 лунок', icon: '🎡', group: 'quick', accent: 'ruby' },
+  { id: 'treasure', title: 'Сокровища', subtitle: '5 барабанов, фриспины ×2', icon: '💰', group: 'quick', accent: 'amber' },
   { id: 'slots', title: 'Слоты', subtitle: '3 барабана, до ×200', icon: '🎰', group: 'quick', accent: 'violet' },
   { id: 'mines', title: 'Сапёр', subtitle: 'Открывай алмазы, беги от мин', icon: '💎', group: 'quick', accent: 'sapphire' },
   { id: 'dice', title: 'Кости', subtitle: 'Сам выбираешь шанс', icon: '🎲', group: 'quick', accent: 'emerald' },
@@ -55,7 +57,7 @@ const GROUPS = [
   { id: 'quick', title: '⚡ Быстрые', note: 'раунд за пару секунд' },
 ];
 
-const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Roulette, slots: Slots, mines: Mines, hilo: HiLo, dice: Dice, crash: Crash, plinko: Plinko, baccarat: Baccarat, limbo: Limbo, tower: Tower, keno: Keno };
+const SCREENS = { blackjack: Blackjack, ochko: Ochko, poker: Poker, roulette: Roulette, slots: Slots, mines: Mines, hilo: HiLo, dice: Dice, crash: Crash, plinko: Plinko, baccarat: Baccarat, limbo: Limbo, tower: Tower, keno: Keno, treasure: Treasure };
 
 export default function App() {
   const [profile, setProfile] = useState(null);

@@ -105,6 +105,55 @@ export function kenoDraw(rng) {
   return n.slice(0, KENO_DRAW); // порядок выпадения сохраняем — так шары и вылетают
 }
 
+// ─── Сокровища: 5 барабанов × 3 ряда с фриспинами ───────────────────────────
+// Символы: C🍒 L🍋 O🍊 G🍇 B🔔 S⭐ D💎 7 — обычные, W🃏 — вайлд (барабаны 2–4),
+// X💰 — скаттер (3+ где угодно запускают бесплатные вращения).
+const TREASURE_BASE = { C: 6, L: 6, O: 5, G: 5, B: 4, S: 3, D: 2, 7: 1 };
+/** Ровно раскладываем символы по ленте (детерминированно, чтобы клиент и сервер совпадали) */
+function spreadStrip(counts) {
+  const items = Object.entries(counts);
+  const total = items.reduce((t, [, n]) => t + n, 0);
+  const acc = items.map(([sym, n]) => ({ sym, n, a: 0 }));
+  const out = [];
+  for (let i = 0; i < total; i++) {
+    let best = null;
+    for (const b of acc) { b.a += b.n / total; if (!best || b.a > best.a) best = b; }
+    best.a -= 1;
+    out.push(best.sym);
+  }
+  return out;
+}
+export const TREASURE_STRIPS = [
+  spreadStrip({ ...TREASURE_BASE, X: 1 }),
+  spreadStrip({ ...TREASURE_BASE, W: 1, X: 1 }),
+  spreadStrip({ ...TREASURE_BASE, W: 2, X: 1 }),
+  spreadStrip({ ...TREASURE_BASE, W: 1, X: 1 }),
+  spreadStrip({ ...TREASURE_BASE, X: 1 }),
+];
+export const TREASURE_FS = { 3: 8, 4: 12, 5: 20 }; // скаттеров → бесплатных вращений
+export const TREASURE_RETRIGGER = 8;
+export const TREASURE_MAX_FS = 100;
+/** Окно 5×3 по остановкам барабанов: grid[барабан][ряд] */
+export const treasureGrid = (stops) => stops.map((p, i) => {
+  const s = TREASURE_STRIPS[i];
+  return [0, 1, 2].map(r => s[(p + r) % s.length]);
+});
+export const treasureScatters = (grid) => grid.flat().filter(x => x === 'X').length;
+/** Все вращения раунда: основное + бесплатные (их число зависит от скаттеров) */
+export function treasureSpins(rng) {
+  const stop = () => TREASURE_STRIPS.map(s => rng.int(s.length));
+  const spins = [stop()];
+  const sc = treasureScatters(treasureGrid(spins[0]));
+  let left = sc >= 3 ? TREASURE_FS[Math.min(5, sc)] : 0;
+  while (left > 0 && spins.length - 1 < TREASURE_MAX_FS) {
+    left--;
+    const st = stop();
+    spins.push(st);
+    if (treasureScatters(treasureGrid(st)) >= 3) left += TREASURE_RETRIGGER;
+  }
+  return spins;
+}
+
 const deckRecord = (deck) => ({ deck: deck.map(cardStr) });
 
 /**
@@ -127,6 +176,7 @@ export const DERIVE = {
   limbo: (rng) => ({ point: limboPoint(rng) }),
   tower: (rng, p) => ({ bombs: towerBombs(rng, p.level) }),
   keno: (rng) => ({ drawn: kenoDraw(rng) }),
+  treasure: (rng) => ({ spins: treasureSpins(rng) }),
   roulette_room: (rng) => ({ pocket: rng.int(ROULETTE_ORDER.length) }),
   blackjack_room: (rng) => deckRecord(deck52(rng)),
   ochko_room: (rng) => deckRecord(deck52(rng)),
@@ -147,6 +197,7 @@ export function describe(game, rec) {
   if (base === 'limbo') return `Выпало ×${rec.point.toFixed(2)}`;
   if (base === 'tower') return `Мины по этажам (снизу): ${rec.bombs.map(f => f.map(i => i + 1).join('+')).join(' · ')}`;
   if (base === 'keno') return `Шары: ${rec.drawn.join(', ')}`;
+  if (base === 'treasure') return `Остановки барабанов: ${rec.spins.map(st => st.join('-')).join(' · ')}${rec.spins.length > 1 ? ` (${rec.spins.length - 1} бесплатных)` : ''}`;
   if (rec.deck) return `Порядок выдачи: ${[...rec.deck].reverse().slice(0, 16).join(' ')}${rec.deck.length > 16 ? ' …' : ''}`;
   return '';
 }
