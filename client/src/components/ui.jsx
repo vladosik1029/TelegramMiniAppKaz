@@ -75,8 +75,9 @@ export function Hand({ title, cards, total, label }) {
  * Поле держит свой текст, пока игрок печатает, а в bet попадает уже зажатое
  * в [1, баланс] число (пустое поле на blur возвращает текущую ставку).
  */
-// Потолок ставки — как MAX_BET на сервере (server/src/telegram.js)
-export const MAX_BET = 1000000;
+// Потолок ставки — сервер присылает свой MAX_BET в /init (App вызывает setMaxBet)
+export let MAX_BET = 1_000_000_000;
+export const setMaxBet = (v) => { if (Number(v) >= 1) MAX_BET = Math.floor(Number(v)); };
 
 export function BetStepper({ balance, bet, setBet, disabled }) {
   const max = Math.max(Math.min(balance, MAX_BET), 1);
@@ -104,7 +105,7 @@ export function BetStepper({ balance, bet, setBet, disabled }) {
           style={fontSize ? { fontSize } : undefined}
           onFocus={(e) => { setEditing(true); setText(String(bet)); requestAnimationFrame(() => e.target.select()); }}
           onChange={(e) => {
-            const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+            const digits = e.target.value.replace(/\D/g, '').slice(0, 13);
             setText(digits);
             if (digits) setBet(clamp(digits));
           }}

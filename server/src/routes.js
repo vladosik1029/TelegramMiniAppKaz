@@ -105,6 +105,7 @@ function me(user) {
     isAdmin: !!user.isAdmin,
     dev: !!user.dev,
     botUsername: env.BOT_USERNAME,
+    maxBet: MAX_BET,
     history,
   };
 }

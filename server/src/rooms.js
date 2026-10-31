@@ -15,7 +15,7 @@
 
 import crypto from 'node:crypto';
 import { db, tx, balanceOf, changeBalance, addHistory } from './db.js';
-import { env } from './telegram.js';
+import { env, MAX_BET } from './telegram.js';
 import * as roulette from './games/roulette.js';
 import {
   CARD_GAMES, bindCardTables, newRound, disposeRound, cardBet, cardClear, cardReady, cardAct,
@@ -34,7 +34,7 @@ export const ROOM_GAMES = {
 
 export const MAX_PLAYERS = 8;
 export const MIN_BUYIN = 10;
-export const MAX_BUYIN = 1_000_000;
+export const MAX_BUYIN = MAX_BET;
 const SPIN_MS = 5200;           // сколько клиенты крутят колесо — ставки на это время закрыты
 const MAX_BETS_PER_PLAYER = 20; // разных позиций за раунд
 const RECENT_NUMBERS = 12;
