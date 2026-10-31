@@ -23,6 +23,7 @@ import {
   FAIR_ERRORS, takeNonce, openRound, closeRound, fairState, setClientSeed, rotateSeed, fairHistory, publicRounds,
 } from './fair/index.js';
 import { admin } from './admin.js';
+import { profileStats, leaderboard } from './profile.js';
 
 export const api = Router();
 
@@ -230,6 +231,12 @@ function handleError(e, res) {
 }
 
 // ─── Provably Fair: сиды игрока, смена сида, история для проверки ───────────
+
+api.get('/profile', (req, res) => res.json(profileStats(req.user.id)));
+api.get('/leaderboard', (req, res) => res.json(leaderboard(req.user.id, {
+  period: req.query.period === 'all' ? 'all' : 'week',
+  by: req.query.by === 'best' ? 'best' : 'net',
+})));
 
 api.get('/fair', (req, res) => {
   res.json({ ...fairState(req.user.id), crash: crashFair() });

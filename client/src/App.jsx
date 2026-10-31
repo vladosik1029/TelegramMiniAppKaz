@@ -38,7 +38,7 @@ const GAMES = [
 const TABS = [
   { id: 'games', icon: '🎰', label: 'Игры' },
   { id: 'tables', icon: '👥', label: 'Столы' },
-  { id: 'wallet', icon: '💰', label: 'Кошелёк' },
+  { id: 'wallet', icon: '👤', label: 'Профиль' },
   { id: 'rules', icon: '📖', label: 'Правила' },
   { id: 'admin', icon: '👑', label: 'Админ', admin: true },
 ];
