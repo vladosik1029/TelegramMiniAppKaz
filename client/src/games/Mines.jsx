@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 import { AnimatedNumber, fmtMult } from '../components/fx.jsx';
+import StakeStrip, { fmtShort } from '../components/StakeStrip.jsx';
 
 const MINE_PRESETS = [1, 3, 5, 10, 24];
 
@@ -45,6 +46,7 @@ export default function Mines({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={!!inRound} sub={inRound && view.mult > 1 ? `→ ${fmtShort(bet * view.mult)}` : null} />
       <motion.div
         className="table-felt mines-felt"
         key={shake}

@@ -75,12 +75,20 @@ export function Hand({ title, cards, total, label }) {
  * Поле держит свой текст, пока игрок печатает, а в bet попадает уже зажатое
  * в [1, баланс] число (пустое поле на blur возвращает текущую ставку).
  */
+// Потолок ставки — как MAX_BET на сервере (server/src/telegram.js)
+export const MAX_BET = 1000000;
+
 export function BetStepper({ balance, bet, setBet, disabled }) {
-  const max = Math.max(balance, 1);
+  const max = Math.max(Math.min(balance, MAX_BET), 1);
   const clamp = (v) => Math.max(1, Math.min(Math.floor(Number(v) || 0), max));
-  const [text, setText] = useState(String(bet));
+  // вне редактирования показываем с пробелами: «1 500 000», при фокусе — голые цифры
+  const pretty = (v) => Number(v).toLocaleString('ru-RU');
+  const [text, setText] = useState(pretty(bet));
   const [editing, setEditing] = useState(false);
-  useEffect(() => { if (!editing) setText(String(bet)); }, [bet, editing]);
+  useEffect(() => { if (!editing) setText(pretty(bet)); }, [bet, editing]);
+  // длинное число не обрезаем, а уменьшаем шрифт
+  const len = text.length;
+  const fontSize = len <= 5 ? undefined : len <= 7 ? 15 : len <= 9 ? 13 : 11;
 
   const step = (d) => { haptic('light'); setBet(clamp(bet + d)); };
   return (
@@ -93,13 +101,14 @@ export function BetStepper({ balance, bet, setBet, disabled }) {
           type="text" inputMode="numeric" pattern="[0-9]*"
           disabled={disabled}
           value={text}
-          onFocus={(e) => { setEditing(true); e.target.select(); }}
+          style={fontSize ? { fontSize } : undefined}
+          onFocus={(e) => { setEditing(true); setText(String(bet)); requestAnimationFrame(() => e.target.select()); }}
           onChange={(e) => {
             const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
             setText(digits);
             if (digits) setBet(clamp(digits));
           }}
-          onBlur={() => { setEditing(false); setText(String(bet)); }}
+          onBlur={() => { setEditing(false); setText(pretty(bet)); }}
           onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
         />
         <span>🪙</span>
@@ -119,7 +128,7 @@ export function BetBar({ balance, bet, setBet, disabled, onDeal, label = 'Раз
         {presets.map(p => (
           <motion.button whileTap={{ scale: .9 }} key={p} className="chip small" disabled={disabled} onClick={() => { haptic('light'); setBet(Math.min(p, balance)); }}>{p}</motion.button>
         ))}
-        <motion.button whileTap={{ scale: .9 }} className="chip small" disabled={disabled} onClick={() => { haptic('light'); setBet(balance); }}>Все 🪙</motion.button>
+        <motion.button whileTap={{ scale: .9 }} className="chip small" disabled={disabled} onClick={() => { haptic('light'); setBet(Math.max(1, Math.min(balance, MAX_BET))); }}>{balance > MAX_BET ? 'Макс' : 'Все'} 🪙</motion.button>
       </div>
       {children}
       <motion.button

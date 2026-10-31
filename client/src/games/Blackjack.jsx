@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { Hand, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
+import StakeStrip from '../components/StakeStrip.jsx';
 
 export default function Blackjack({ profile, refresh }) {
   const [bet, setBet] = useState(50);
@@ -49,6 +50,7 @@ export default function Blackjack({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={view ? bet * (view.betUnits ?? 1) : bet} live={!!inRound} sub={inRound && view.betUnits > 1 ? 'дабл ×2' : null} />
       <div className="table-felt">
         <Hand title="🤖 Дилер" cards={view?.dealer ?? []} total={view?.dealerTotal} />
         <div className="felt-sep" />

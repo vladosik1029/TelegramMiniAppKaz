@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { ResultBanner, BetStepper, actionsStagger, actionsItem } from '../components/ui.jsx';
 import Wheel, { ROULETTE_BETS as BETS, COLOR_NAME, NumberStrip } from '../components/Wheel.jsx';
+import StakeStrip from '../components/StakeStrip.jsx';
 
 const SPIN_S = 4.2;
 
@@ -40,6 +41,7 @@ export default function Roulette({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={busy} sub={bType === 'num' ? (num != null ? `на ${num}` : null) : BETS.find(b => b.type === bType)?.label} />
 
       {/* ─── стол ───────────────────────────────────────── */}
       <div className="table-felt rw-felt">
@@ -99,7 +101,7 @@ export default function Roulette({ profile, refresh }) {
           >
             {busy ? 'Колесо крутится…' : bType === 'num' && num == null ? 'Выбери число' : 'Крутить колесо 🎡'}
           </motion.button>
-          {bet > balance && <div className="hint">Ставка больше баланса — уменьши её</div>}
+          {!busy && bet > balance && <div className="hint">Ставка больше баланса — уменьши её</div>}
         </div>
       )}
 

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { haptic, wsConnect, wsSend, onWsMsg, wsIsOpen } from '../api.js';
 import { FairLine } from '../components/Fairness.jsx';
 import { BetStepper } from '../components/ui.jsx';
+import StakeStrip, { fmtShort } from '../components/StakeStrip.jsx';
 
 const fmt = (n) => Number(n).toLocaleString('ru-RU');
 const fmtX = (m) => `×${Number(m).toFixed(2)}`;
@@ -75,6 +76,12 @@ export default function Crash({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={you ? you.amount : bet} live={!!you && you.cashedAt == null && c?.phase !== 'crashed'}
+        sub={!you ? null
+          : you.cashedAt != null ? `забрал ${fmtShort(you.payout)}`
+          : c?.phase === 'crashed' ? 'сгорела 💥'
+          : c?.phase === 'flying' ? `→ ${fmtShort(you.amount * mult)}`
+          : you.auto ? `авто ×${Number(you.auto).toFixed(2)}` : null} />
       <div className="table-felt crash-felt">
         <div className="crash-recent">
           {(c?.recent ?? []).map((p, i) => <span key={`${c.round}-${i}`} className={`crash-pill ${tone(p)}`}>{fmtX(p)}</span>)}

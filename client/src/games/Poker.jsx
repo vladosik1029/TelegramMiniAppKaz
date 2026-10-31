@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { CardView, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
+import StakeStrip from '../components/StakeStrip.jsx';
 
 function PokerHand({ title, cards, label, selectable, selected, onToggle }) {
   return (
@@ -83,6 +84,7 @@ export default function Poker({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={!!(view && !result)} />
       <div className="table-felt">
         <PokerHand
           title="🤖 Бот" cards={view?.bot ?? []}

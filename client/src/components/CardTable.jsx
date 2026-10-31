@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { haptic, wsSend } from '../api.js';
 import { CardView, actionsStagger, actionsItem } from './ui.jsx';
 import { AnimatedNumber } from './fx.jsx';
+import StakeStrip, { fmtShort } from './StakeStrip.jsx';
 
 const fmt = (n) => Number(n).toLocaleString('ru-RU');
 const CHIPS = [5, 10, 25, 50, 100, 500];
@@ -102,6 +103,9 @@ export default function CardTable({ room, profile, connected, head, err, setErr,
   return (
     <motion.div className="game-screen room-screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {head}
+      <StakeStrip amount={myStake} live={myStake > 0 && r.phase !== 'betting'}
+        label={poker ? 'Вложено' : durak ? 'Ставка партии' : 'Ставка'}
+        sub={poker && r.pot ? `банк ${fmtShort(r.pot)}` : null} />
 
       <div className="table-felt ct-felt">
         <div className="ct-status">

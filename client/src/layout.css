@@ -184,3 +184,52 @@
 .fair-line code { font-family: ui-monospace, Menlo, monospace; color: var(--text); }
 .room-head { flex-wrap: wrap; }
 .fair-seed-row .btn { flex: none; min-width: 48px; }
+
+/* ─── ставка сверху экрана (прилипает при прокрутке) ─── */
+.stake-strip {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; justify-content: center;
+  min-height: 40px; margin: -2px 0 8px; padding-top: max(4px, env(safe-area-inset-top));
+  pointer-events: none;
+}
+.stake-pill {
+  pointer-events: auto;
+  display: inline-flex; align-items: center; gap: 7px; max-width: 100%;
+  height: 32px; padding: 0 14px; border-radius: 999px;
+  background: rgba(14, 26, 18, .92); border: 1px solid #3a6247;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+  white-space: nowrap; overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.stake-pill.live { border-color: var(--gold2); box-shadow: 0 4px 16px rgba(230, 192, 101, .18); }
+.stake-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.stake-value { font-size: 16px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+.stake-sub {
+  font-size: 12px; font-weight: 700; color: var(--text); opacity: .85;
+  padding-left: 8px; border-left: 1px solid #3a6247; overflow: hidden; text-overflow: ellipsis;
+}
+.stake-dot {
+  flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 0 0 rgba(59, 163, 107, .7); animation: stakePulse 1.6s infinite;
+}
+@keyframes stakePulse {
+  0% { box-shadow: 0 0 0 0 rgba(59, 163, 107, .7); }
+  70% { box-shadow: 0 0 0 7px rgba(59, 163, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 163, 107, 0); }
+}
+@media (max-width: 360px) {
+  .stake-pill { padding: 0 10px; gap: 5px; }
+  .stake-value { font-size: 15px; }
+  .stake-sub { font-size: 11px; padding-left: 6px; }
+}
+@media (min-width: 900px) {
+  .game-screen > .stake-strip { margin-bottom: 10px; justify-content: flex-start; }
+}
+
+/* узкий телефон: поле ставки шире, чтобы большое число не обрезалось */
+@media (max-width: 420px) {
+  .bet-stepper { gap: 5px; }
+  .bet-stepper .chip { width: 46px; font-size: 12px; padding: 10px 0; }
+  .bet-stepper .bet-input-wrap { padding: 0 6px; }
+  .bet-stepper .bet-input-wrap > span { display: none; }
+}
