@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { BetBar, Hand, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 import StakeStrip from '../components/StakeStrip.jsx';
+import { BetSpot } from '../components/Chips.jsx';
 
 const SIDES = [
   ['player', 'Игрок', '×2'],
@@ -80,7 +81,7 @@ export default function Baccarat({ profile, refresh }) {
           <Hand title={`🙋 Игрок${side === 'player' ? ' · твоя ставка' : ''}`} cards={pCards} total={v ? totalOf(pCards) : null}
             label={win === 'player' ? 'Победа' : null} />
         </div>
-        <div className="felt-sep" />
+        <BetSpot amount={deal ? bet : 0} label={deal ? `на «${NAME[deal.view.side ?? side]}»` : null} />
         <div className={`bac-side ${win === 'banker' ? 'won' : ''}`}>
           <Hand title={`🏦 Банкир${side === 'banker' ? ' · твоя ставка' : ''}`} cards={bCards} total={v ? totalOf(bCards) : null}
             label={win === 'banker' ? 'Победа' : null} />

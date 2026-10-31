@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { Hand, BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 import StakeStrip from '../components/StakeStrip.jsx';
+import { BetSpot } from '../components/Chips.jsx';
 
 const OUTCOME_EXTRA = {
   pan_pan: '🩸 ПАН-ПАН! Обе карты пиковые — выплата 3:1',
@@ -58,7 +59,7 @@ export default function Ochko({ profile, refresh }) {
       <StakeStrip amount={bet} live={!!inRound} />
       <div className="table-felt">
         <Hand title="🤖 Крупье" cards={view?.dealer ?? []} total={view?.dealerTotal} />
-        <div className="felt-sep" />
+        <BetSpot amount={view ? bet : 0} />
         <Hand
           title="🙋 Ты" cards={view?.player ?? []} total={view?.playerTotal}
           label={inRound && view.playerTotal === 21 ? 'Очко!' : inRound && view.playerTotal > 21 ? 'Перебор' : null}

@@ -315,3 +315,31 @@
   .dk-hand.many .dk-card { margin-left: clamp(-40px, calc((100cqw - var(--n) * 54px) / (var(--n) - 1)), 3px); }
 }
 .dk-hand .dk-card:first-child { margin-left: 0; }
+
+/* ─── фишки стопкой ─── */
+.chip-stack {
+  --w: 30px; --h: 9px; --step: 4px;
+  position: relative; display: inline-block; flex: none;
+  width: var(--w); height: calc(var(--h) + (var(--n) - 1) * var(--step) + 4px);
+}
+.chip-stack.sm { --w: 18px; --h: 6px; --step: 2.5px; }
+.stack-chip {
+  position: absolute; left: 0; bottom: calc(var(--i) * var(--step));
+  width: var(--w); height: var(--h); border-radius: 50%;
+  background: var(--c);
+  border: 2px dashed rgba(255, 255, 255, .6);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(0, 0, 0, .25);
+}
+.chip-stack.sm .stack-chip { border-width: 1px; box-shadow: 0 1px 0 rgba(0, 0, 0, .55); }
+.bet-spot { position: relative; margin: 10px 0; }
+.bet-spot > .felt-sep { margin: 0; position: absolute; left: 0; right: 0; top: 50%; }
+.bet-spot-inner {
+  position: relative; margin: 0 auto; width: max-content;
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 4px 12px 5px; border-radius: 999px;
+  background: rgba(10, 30, 18, .85); border: 1px dashed rgba(230, 192, 101, .45);
+}
+.bet-spot-amount { font-weight: 900; color: var(--gold); font-size: 14px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.bet-spot-amount small { display: block; font-size: 10px; color: var(--muted); font-weight: 700; }
+.bet-stake.with-stack { display: inline-flex; align-items: flex-end; gap: 3px; padding: 2px 5px 2px 3px; }
+.ct-stake { display: inline-flex; align-items: flex-end; gap: 5px; }

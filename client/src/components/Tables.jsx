@@ -11,6 +11,8 @@ import { AnimatedNumber } from './fx.jsx';
 import CardTable from './CardTable.jsx';
 import { FairLine } from './Fairness.jsx';
 import StakeStrip from './StakeStrip.jsx';
+import { ChipStack } from './Chips.jsx';
+import { fmtShort } from './StakeStrip.jsx';
 
 const GAME_ICON = { roulette: '🎡', blackjack: '🂡', ochko: '♠️', poker: '🂱', durak: '🃏' };
 const GAME_TITLE = { roulette: 'рулетка', blackjack: 'блэкджек', ochko: 'очко', poker: 'покер', durak: 'дурак' };
@@ -511,7 +513,7 @@ function RoomScreen({ roomId, profile, onExit }) {
                 className={`bet-opt ${b.cls || ''} ${s ? 'active-chip' : ''}`} onClick={() => bet(b.type)}>
                 <span>{b.label}</span>
                 <small>{b.mult}</small>
-                {s > 0 && <i className="bet-stake">{fmt(s)}</i>}
+                {s > 0 && <i className="bet-stake with-stack"><ChipStack amount={s} size="sm" max={4} />{fmtShort(s)}</i>}
               </motion.button>
             );
           })}
