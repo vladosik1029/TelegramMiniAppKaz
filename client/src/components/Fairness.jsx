@@ -206,18 +206,18 @@ function RoundRow({ r }) {
 
 const Check = ({ ok, text }) => <div className={`fair-check ${ok ? 'pos' : 'neg'}`}>{ok ? '✓' : '✗'} {text}</div>;
 
-const MANUAL_GAMES = ['roulette', 'dice', 'slots', 'plinko', 'mines', 'hilo', 'blackjack', 'ochko', 'poker', 'baccarat', 'crash',
+const MANUAL_GAMES = ['roulette', 'dice', 'slots', 'plinko', 'mines', 'hilo', 'limbo', 'tower', 'keno', 'blackjack', 'ochko', 'poker', 'baccarat', 'crash',
   'roulette_room', 'blackjack_room', 'ochko_room', 'poker_room', 'durak_room'];
 
 /** Пересчёт по любым сидам — например, скопированным из истории */
 function ManualCheck() {
-  const [f, setF] = useState({ game: 'dice', serverSeed: '', clientSeed: '', nonce: 0, mines: 3, cards: 5 });
+  const [f, setF] = useState({ game: 'dice', serverSeed: '', clientSeed: '', nonce: 0, mines: 3, cards: 5, level: 'medium' });
   const [out, setOut] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   const calc = async () => {
     try {
-      const params = f.game === 'mines' ? { mines: Number(f.mines) } : f.game === 'hilo' ? { cards: Number(f.cards) } : {};
+      const params = f.game === 'mines' ? { mines: Number(f.mines) } : f.game === 'hilo' ? { cards: Number(f.cards) } : f.game === 'tower' ? { level: f.level } : {};
       const record = await deriveRound({ game: f.game, serverSeed: f.serverSeed, clientSeed: f.clientSeed, nonce: Number(f.nonce), params });
       setOut({ hash: await sha256Hex(f.serverSeed), text: describe(f.game, record) });
     } catch (e) { setOut({ error: e.message }); }
@@ -236,6 +236,8 @@ function ManualCheck() {
       <div className="fair-label">Nonce</div>
       <input className="input" type="number" min={0} value={f.nonce} onChange={set('nonce')} />
       {f.game === 'mines' && <><div className="fair-label">Мин на поле</div><input className="input" type="number" min={1} max={24} value={f.mines} onChange={set('mines')} /></>}
+      {f.game === 'tower' && <><div className="fair-label">Сложность</div><select className="input" value={f.level} onChange={set('level')}>
+        <option value="easy">Лёгкая</option><option value="medium">Средняя</option><option value="hard">Сложная</option><option value="expert">Эксперт</option></select></>}
       {f.game === 'hilo' && <><div className="fair-label">Сколько карт открыто</div><input className="input" type="number" min={1} max={500} value={f.cards} onChange={set('cards')} /></>}
       <div className="actions"><button className="btn primary big" disabled={!f.serverSeed} onClick={calc}>Пересчитать</button></div>
       {out?.error && <div className="notice">⚠ {out.error}</div>}

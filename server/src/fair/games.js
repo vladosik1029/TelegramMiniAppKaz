@@ -65,6 +65,46 @@ export function crashPoint(rng) {
   return Math.min(CRASH_MAX, Math.max(1, Math.floor(99 / (1 - r)) / 100));
 }
 
+/** Лимбо: та же формула, что у Ракеты, но потолок выше */
+export const LIMBO_MAX = 1000000;
+export function limboPoint(rng) {
+  const r = rng.u32() / 2 ** 32;
+  return Math.min(LIMBO_MAX, Math.max(1, Math.floor(99 / (1 - r)) / 100));
+}
+
+/** Башня: уровни сложности — сколько клеток на этаже и сколько из них мины */
+export const TOWER_FLOORS = 8;
+export const TOWER_LEVELS = {
+  easy: { cells: 4, bombs: 1 },
+  medium: { cells: 3, bombs: 1 },
+  hard: { cells: 2, bombs: 1 },
+  expert: { cells: 3, bombs: 2 },
+};
+/** Мины на каждом этаже: частичный Фишер–Йетс по клеткам этажа */
+export function towerBombs(rng, level) {
+  const { cells, bombs } = TOWER_LEVELS[level];
+  return Array.from({ length: TOWER_FLOORS }, () => {
+    const c = Array.from({ length: cells }, (_, i) => i);
+    for (let i = 0; i < bombs; i++) {
+      const j = i + rng.int(cells - i);
+      [c[i], c[j]] = [c[j], c[i]];
+    }
+    return c.slice(0, bombs).sort((a, b) => a - b);
+  });
+}
+
+/** Кено: 10 шаров из 40 */
+export const KENO_NUMBERS = 40;
+export const KENO_DRAW = 10;
+export function kenoDraw(rng) {
+  const n = Array.from({ length: KENO_NUMBERS }, (_, i) => i + 1);
+  for (let i = 0; i < KENO_DRAW; i++) {
+    const j = i + rng.int(KENO_NUMBERS - i);
+    [n[i], n[j]] = [n[j], n[i]];
+  }
+  return n.slice(0, KENO_DRAW); // порядок выпадения сохраняем — так шары и вылетают
+}
+
 const deckRecord = (deck) => ({ deck: deck.map(cardStr) });
 
 /**
@@ -84,6 +124,9 @@ export const DERIVE = {
   poker: (rng) => deckRecord(deck52(rng)),
   baccarat: (rng) => deckRecord(baccaratShoe(rng)),
   crash: (rng) => ({ point: crashPoint(rng) }),
+  limbo: (rng) => ({ point: limboPoint(rng) }),
+  tower: (rng, p) => ({ bombs: towerBombs(rng, p.level) }),
+  keno: (rng) => ({ drawn: kenoDraw(rng) }),
   roulette_room: (rng) => ({ pocket: rng.int(ROULETTE_ORDER.length) }),
   blackjack_room: (rng) => deckRecord(deck52(rng)),
   ochko_room: (rng) => deckRecord(deck52(rng)),
@@ -101,6 +144,9 @@ export function describe(game, rec) {
   if (base === 'mines') return `Мины в клетках ${rec.bombs.map(i => i + 1).join(', ')}`;
   if (base === 'hilo') return `Карты: ${rec.cards.join(' ')}`;
   if (base === 'crash') return `Взрыв на ×${rec.point.toFixed(2)}`;
+  if (base === 'limbo') return `Выпало ×${rec.point.toFixed(2)}`;
+  if (base === 'tower') return `Мины по этажам (снизу): ${rec.bombs.map(f => f.map(i => i + 1).join('+')).join(' · ')}`;
+  if (base === 'keno') return `Шары: ${rec.drawn.join(', ')}`;
   if (rec.deck) return `Порядок выдачи: ${[...rec.deck].reverse().slice(0, 16).join(' ')}${rec.deck.length > 16 ? ' …' : ''}`;
   return '';
 }

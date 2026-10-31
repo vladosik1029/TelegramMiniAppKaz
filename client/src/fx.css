@@ -326,3 +326,54 @@
 .bac-pick.active { border-color: transparent; box-shadow: 0 0 0 2px rgba(255, 255, 255, .35); }
 .bac-pick.active small { color: #fff; }
 .bac-pick:disabled { opacity: .6; }
+
+/* ─── лимбо ─── */
+.limbo-felt { text-align: center; padding: 16px; }
+.limbo-readout {
+  font-size: 58px; font-weight: 900; line-height: 1.1; margin: 22px 0 6px;
+  font-variant-numeric: tabular-nums; color: var(--gold); text-shadow: 0 4px 18px rgba(0, 0, 0, .5);
+}
+.limbo-readout.win { color: #7ef0ae; }
+.limbo-readout.lose { color: #ff8a80; }
+.limbo-target {
+  display: flex; align-items: center; gap: 8px; margin: 4px 0 8px;
+  background: var(--bg2); border: 1px solid #3a6247; border-radius: 10px; padding: 0 12px; height: 42px;
+}
+.limbo-target span { color: var(--muted); font-weight: 800; flex: none; }
+.limbo-target .bet-input { text-align: left; }
+.crash-pill.hi { color: #7ef0ae; }
+.crash-pill.lo { color: #ff8a80; }
+
+/* ─── башня ─── */
+.tower { display: flex; flex-direction: column; gap: 6px; max-width: 340px; margin: 0 auto; }
+.tower-floor { display: flex; align-items: center; gap: 8px; opacity: .55; transition: opacity .2s; }
+.tower-floor.current, .tower-floor.passed { opacity: 1; }
+.tower-mult { flex: none; width: 58px; text-align: right; font-size: 12px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tower-floor.current .tower-mult { color: var(--gold); }
+.tower-cells { flex: 1; display: grid; gap: 6px; }
+.tower-cell {
+  height: 38px; border-radius: 10px; cursor: pointer; font-size: 20px;
+  border: 1px solid #3a6247; background: linear-gradient(160deg, #2f5d40, #1d3d2a);
+  box-shadow: 0 3px 0 #0f2418; display: flex; align-items: center; justify-content: center;
+}
+.tower-cell:disabled { cursor: default; }
+.tower-floor.current .tower-cell { border-color: var(--gold2); box-shadow: 0 3px 0 #0f2418, 0 0 10px rgba(230, 192, 101, .25); }
+.tower-cell.safe { background: radial-gradient(circle at 50% 40%, #2c6c8a, #163848); border-color: #4fb4dd; }
+.tower-cell.bomb { background: radial-gradient(circle at 50% 40%, #6b2b2f, #3a1518); border-color: #a34149; }
+.tower-cell.boom { background: radial-gradient(circle, #ffb35c, #b1342c 70%); border-color: #ffd28a; }
+
+/* ─── кено ─── */
+.keno-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; max-width: 380px; margin: 0 auto; }
+.keno-cell {
+  aspect-ratio: 1; border-radius: 9px; cursor: pointer; font-weight: 900; font-size: 14px; color: var(--text);
+  border: 1px solid #3a6247; background: linear-gradient(160deg, #2f5d40, #1d3d2a); box-shadow: 0 2px 0 #0f2418;
+}
+.keno-cell.pick { background: linear-gradient(160deg, #e6c065, #b48b3c); color: #1b1407; border-color: #ffe2a0; }
+.keno-cell.drawn { background: radial-gradient(circle at 50% 40%, #2c6c8a, #163848); border-color: #4fb4dd; color: #fff; }
+.keno-cell.hit { background: radial-gradient(circle at 50% 40%, #46d98a, #1c7a48); border-color: #a5f5c8; color: #fff; box-shadow: 0 0 14px rgba(70, 217, 138, .6); }
+.keno-pays { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-top: 12px; min-height: 34px; }
+.keno-pay { display: flex; flex-direction: column; align-items: center; padding: 3px 8px; border-radius: 8px; background: rgba(0, 0, 0, .25); font-weight: 900; font-size: 13px; color: var(--gold); }
+.keno-pay small { font-size: 9.5px; color: var(--muted); font-weight: 700; }
+.keno-pay.now { background: rgba(70, 217, 138, .25); box-shadow: 0 0 0 1px #46d98a; }
+.keno-tools { margin: 0 0 10px; }
+.keno-tools .btn { flex: 1; }

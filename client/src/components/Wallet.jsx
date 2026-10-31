@@ -8,7 +8,7 @@ import { fmtShort } from './StakeStrip.jsx';
 
 export const GAME_NAMES = {
   blackjack: 'Blackjack', ochko: 'Очко', poker: 'Покер', roulette: 'Рулетка', roulette_room: 'Рулетка · стол', blackjack_room: 'Blackjack · стол', ochko_room: 'Очко · стол', poker_room: 'Покер · стол', durak_room: 'Дурак · стол', crash: 'Ракета', plinko: 'Плинко', baccarat: 'Баккара',
-  slots: 'Слоты', mines: 'Сапёр', hilo: 'Выше / Ниже', dice: 'Кости',
+  slots: 'Слоты', mines: 'Сапёр', hilo: 'Выше / Ниже', dice: 'Кости', limbo: 'Лимбо', tower: 'Башня', keno: 'Кено',
 };
 
 const fmt = (n) => Number(n || 0).toLocaleString('ru-RU');

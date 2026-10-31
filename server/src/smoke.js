@@ -11,6 +11,9 @@ import * as baccarat from './games/baccarat.js';
 import * as slots from './games/slots.js';
 import * as mines from './games/mines.js';
 import * as hilo from './games/hilo.js';
+import * as limbo from './games/limbo.js';
+import * as tower from './games/tower.js';
+import * as keno from './games/keno.js';
 
 const assert = (cond, msg) => { if (!cond) { console.error('FAIL:', msg); process.exitCode = 1; } };
 
@@ -206,3 +209,48 @@ rtp('Выше/Ниже (2 шага)', 40000, () => {
   }
   return hilo.act(st, 'cashout').returnMult;
 });
+
+// ─── Лимбо, Башня, Кено ─────────────────────────────────────────────────────
+rtp('Лимбо (×2)', 60000, () => limbo.start(10, { target: 2 }).returnMult);
+rtp('Лимбо (×10)', 100000, () => limbo.start(10, { target: 10 }).returnMult);
+for (const o of [{}, { target: 1 }, { target: 10001 }, { target: 'x' }]) {
+  let ok = false; try { limbo.start(10, o); } catch { ok = true; }
+  assert(ok, 'limbo отклоняет ' + JSON.stringify(o));
+}
+for (const level of Object.keys(tower.LEVELS)) {
+  rtp(`Башня (${level}, 3 этажа)`, 30000, () => {
+    const s = tower.start(10, { level });
+    assert(s.view.bombs.length === 0, 'tower не светит мины до хода');
+    let st = s.state, r;
+    for (let k = 0; k < 3; k++) {
+      r = tower.act(st, 'pick:' + Math.floor(Math.random() * tower.LEVELS[level].cells));
+      if (r.finished) return r.returnMult;
+      st = r.state;
+    }
+    return tower.act(st, 'cashout').returnMult;
+  });
+}
+{
+  // до верха на лёгком — выплата ×0.99·(4/3)^8
+  const s = tower.start(10, { level: 'easy' });
+  let r;
+  for (let k = 0; k < tower.FLOORS; k++) r = tower.act(s.state, 'pick:' + [0, 1, 2, 3].find(c => !s.state.bombs[k].includes(c)));
+  assert(r.finished && r.returnMult === tower.multAfter('easy', 8), 'tower top: ' + r.returnMult);
+}
+for (const n of [1, 4, 10]) {
+  const picks = Array.from({ length: n }, (_, i) => i * 3 + 1);
+  rtp(`Кено (${n} чисел)`, 60000, () => keno.start(10, { picks }).returnMult);
+}
+for (const o of [{ picks: [] }, { picks: [1, 1] }, { picks: [0] }, { picks: [41] }, { picks: Array.from({ length: 11 }, (_, i) => i + 1) }]) {
+  let ok = false; try { keno.start(10, o); } catch { ok = true; }
+  assert(ok, 'keno отклоняет ' + JSON.stringify(o));
+}
+{
+  // точный возврат кено по таблице выплат (гипергеометрия 10 из 40)
+  const C = (n, k) => { let r = 1; for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1); return r; };
+  for (const [p, row] of Object.entries(keno.PAYS)) {
+    const ev = Object.entries(row).reduce((s, [h, m]) => s + m * C(+p, +h) * C(40 - p, 10 - h) / C(40, 10), 0);
+    assert(ev > 0.96 && ev <= 0.99, `кено ${p}: точный возврат ${ev}`);
+  }
+  console.log('Кено: точный возврат по всем строкам таблицы 96–99%');
+}
