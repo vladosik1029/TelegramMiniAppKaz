@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { BetBar, Hand, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
+import StakeStrip from '../components/StakeStrip.jsx';
 
 const SIDES = [
   ['player', 'Игрок', '×2'],
@@ -69,6 +70,7 @@ export default function Baccarat({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={busy && !!deal} sub={`на «${NAME[side]}»`} />
       <div className="table-felt bac-felt">
         <div className="bac-road">
           {road.map((w, i) => <span key={road.length - i} className={`bac-dot ${w}`}>{w === 'player' ? 'И' : w === 'banker' ? 'Б' : 'Н'}</span>)}

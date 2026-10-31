@@ -3,6 +3,7 @@
 // клиент только проигрывает его анимацией. Можно бросать несколько шариков подряд.
 
 import React, { useRef, useState } from 'react';
+import StakeStrip, { fmtShort } from '../components/StakeStrip.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { BetStepper } from '../components/ui.jsx';
@@ -67,9 +68,12 @@ export default function Plinko({ profile, refresh }) {
   };
 
   const table = TABLES[risk];
+  const flying = balls.reduce((s, b) => s + b.bet, 0);
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={balls.length > 0}
+        sub={balls.length ? `в полёте ${balls.length} · ${fmtShort(flying)}` : null} />
       <div className="table-felt plinko-felt">
         <div className="plinko-recent">
           <AnimatePresence initial={false}>

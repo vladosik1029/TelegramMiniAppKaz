@@ -10,6 +10,7 @@ import Wheel, { ROULETTE_BETS, COLOR_NAME, NumberStrip, colorOf } from './Wheel.
 import { AnimatedNumber } from './fx.jsx';
 import CardTable from './CardTable.jsx';
 import { FairLine } from './Fairness.jsx';
+import StakeStrip from './StakeStrip.jsx';
 
 const GAME_ICON = { roulette: '🎡', blackjack: '🂡', ochko: '♠️', poker: '🂱', durak: '🃏' };
 const GAME_TITLE = { roulette: 'рулетка', blackjack: 'блэкджек', ochko: 'очко', poker: 'покер', durak: 'дурак' };
@@ -427,6 +428,7 @@ function RoomScreen({ roomId, profile, onExit }) {
   return (
     <motion.div className="game-screen room-screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {head}
+      <StakeStrip amount={spinning ? frozenStake : myStake} live={(spinning ? frozenStake : myStake) > 0} label="Твоя ставка" />
 
       <div className="table-felt rw-felt">
         <div className="rw-wrap">

@@ -6,6 +6,7 @@ import { motion, animate, useMotionValue, useMotionValueEvent, useTransform } fr
 import { api, haptic } from '../api.js';
 import { BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
 import { fmtMult } from '../components/fx.jsx';
+import StakeStrip, { fmtShort } from '../components/StakeStrip.jsx';
 
 const EDGE = 0.99; // как на сервере (server/src/games/dice.js)
 const chanceOf = (dir, t) => (dir === 'under' ? t : 100 - t) / 100;
@@ -49,6 +50,7 @@ export default function Dice({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={busy} sub={`→ ${fmtShort(bet * mult)}`} />
       <div className="table-felt dice-felt">
         <div className={`dice-readout ${landed}`}>
           {shown == null ? '—' : shown.toFixed(2)}

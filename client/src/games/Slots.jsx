@@ -6,6 +6,7 @@ import React, { useRef, useState } from 'react';
 import { motion, animate, useMotionValue } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { BetBar, ResultBanner, actionsStagger, actionsItem } from '../components/ui.jsx';
+import StakeStrip from '../components/StakeStrip.jsx';
 
 // Дубликат ленты для первого рендера (до первого спина); сервер всё равно присылает свою
 const STRIP0 = ['🍒', '🍋', '🍊', '🍒', '🍇', '🍋', '🔔', '🍊', '🍒', '🍋', '⭐', '🍊', '🍇', '🍒', '🍋', '💎', '🍊', '🍒', '🍇', '🔔', '🍋', '🍊', '7️⃣', '🍇'];
@@ -61,6 +62,7 @@ export default function Slots({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={busy} />
       <div className="table-felt slots-felt">
         <div className="slot-machine">
           <div className="slot-lights" aria-hidden>

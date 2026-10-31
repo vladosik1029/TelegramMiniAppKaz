@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api, haptic } from '../api.js';
 import { BetBar, ResultBanner, CardView, actionsStagger, actionsItem } from '../components/ui.jsx';
 import { AnimatedNumber, fmtMult } from '../components/fx.jsx';
+import StakeStrip, { fmtShort } from '../components/StakeStrip.jsx';
 
 const pct = (p) => `${Math.round(p * 100)}%`;
 
@@ -43,6 +44,7 @@ export default function HiLo({ profile, refresh }) {
 
   return (
     <main className="page game-screen">
+      <StakeStrip amount={bet} live={!!inRound} sub={inRound && view.steps > 0 ? `→ ${fmtShort(bet * view.mult)}` : null} />
       <div className="table-felt hilo-felt">
         <div className="hilo-trail">
           <AnimatePresence initial={false}>
